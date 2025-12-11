@@ -16,6 +16,9 @@ from ..llm import call_llm as _call_llm
 class LLMNode(Node):
     """Base class for LLM-based nodes with caching and throttling."""
 
+    # Class-level default model - subclasses should override
+    default_model: str = "anthropic/claude-sonnet-4-20250514"
+
     # Class-level locks for thread-safe cache and rate limiting
     _cache_lock = Lock()
     _rate_limit_lock = Lock()
@@ -23,18 +26,24 @@ class LLMNode(Node):
     _rate_limit_tokens = {}  # instance_id -> (tokens, last_update)
 
     def __init__(
-        self, config: WorkflowConfig, cache_ttl: int = 3600, rate_limit: int = None
+        self,
+        config: WorkflowConfig,
+        model: str | None = None,
+        cache_ttl: int = 3600,
+        rate_limit: int = None,
     ):
         """
         Initialize LLM node with caching and rate limiting.
 
         Args:
             config: Workflow configuration
+            model: LLM model identifier (uses class default_model if not provided)
             cache_ttl: Cache time-to-live in seconds, 0 = disabled
             rate_limit: Requests per minute, None = unlimited
         """
         super().__init__(max_retries=config.max_retries)
         self.config = config
+        self.model = model if model is not None else self.default_model
         self.cache_ttl = cache_ttl  # seconds, 0 = disabled
         self.rate_limit = rate_limit  # requests per minute, None = unlimited
         self._instance_id = id(self)  # Unique ID for rate limiting
@@ -200,6 +209,7 @@ class LLMNode(Node):
         result = _call_llm(
             prompt=prompt,
             system_prompt=system_prompt,
+            model=self.model,
             config=self.config,
             yaml_response=yaml_response,
             span_name=span_name,

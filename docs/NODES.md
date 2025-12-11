@@ -21,12 +21,14 @@ shared dict → prep() → exec() → post() → action string → next node
 
 ### LLM-Based Nodes
 
+All LLM nodes accept a `model` parameter to specify which LLM to use. Each node class defines a `default_model` that is used if not overridden.
+
 | Node | Description | Parameters | Actions |
 |------|-------------|------------|---------|
-| **ClassifierNode** | Classify into categories | `categories: list[str]`, `description: str` | category names |
-| **SentimentNode** | Analyze sentiment/tone | `granularity: basic\|detailed` | `positive`, `negative`, `neutral`, `mixed` |
-| **DataExtractorNode** | Extract structured data | `fields: list[str]`, `description: str` | `extracted`, `no_data` |
-| **SamplerNode** | Run N evaluations for consensus | `samples: int`, `threshold: float` | `consensus`, `no_consensus` |
+| **ClassifierNode** | Classify into categories | `categories: list[str]`, `model: str`, `descriptions: dict` | category names |
+| **SentimentNode** | Analyze sentiment/tone | `model: str`, `granularity: basic\|detailed` | `positive`, `negative`, `neutral`, `mixed` |
+| **DataExtractorNode** | Extract structured data | `schema: dict`, `model: str` | `default` |
+| **SamplerNode** | Run N evaluations for consensus | `n_samples: int`, `aggregation: str`, `inner_prompt: str`, `model: str` | `consensus`, `majority`, `split` |
 
 ### Internal Nodes (Used by Parser)
 
@@ -95,10 +97,22 @@ register_node(MyNode)
 
 ## Creating an LLM Node
 
+Each node defines its own `default_model` and result model directly in its file:
+
 ```python
+from pydantic import BaseModel, Field
 from policy_evaluator.nodes import LLMNode, NodeSchema, NodeParameter
 
+# Define the result model in the same file as the node
+class MyAnalysisResult(BaseModel):
+    """Result from MyLLMNode."""
+    summary: str = Field(description="Analysis summary")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
+
 class MyLLMNode(LLMNode):
+    # Each node defines its own default model
+    default_model: str = "anthropic/claude-sonnet-4-20250514"
+
     parser_schema = NodeSchema(
         name="MyLLMNode",
         description="LLM-powered analysis",
@@ -108,8 +122,8 @@ class MyLLMNode(LLMNode):
         parser_exposed=True,
     )
 
-    def __init__(self, config, prompt: str, cache_ttl: int = 3600):
-        super().__init__(config=config, cache_ttl=cache_ttl)
+    def __init__(self, config, model: str | None = None, prompt: str = "", cache_ttl: int = 3600):
+        super().__init__(config=config, model=model, cache_ttl=cache_ttl)
         self.prompt = prompt
 
     def prep(self, shared: dict) -> dict:

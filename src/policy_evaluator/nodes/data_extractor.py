@@ -55,6 +55,7 @@ class DataExtractorNode(LLMNode):
         self,
         schema: dict,
         config: WorkflowConfig | None = None,
+        model: str | None = None,
         cache_ttl: int = 3600,
         rate_limit: int | None = None,
     ):
@@ -70,12 +71,14 @@ class DataExtractorNode(LLMNode):
                 - facts: list[str] - Simple facts to extract
                   e.g. ["main topic", "sentiment"]
             config: Workflow configuration
+            model: LLM model identifier (uses class default_model if not provided)
             cache_ttl: Cache time-to-live in seconds (0 = disabled)
             rate_limit: Requests per minute (None = unlimited)
         """
         self.schema = schema
         super().__init__(
             config=config or WorkflowConfig(),
+            model=model,
             cache_ttl=cache_ttl,
             rate_limit=rate_limit,
         )

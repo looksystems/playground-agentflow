@@ -4,8 +4,22 @@ import re
 from typing import Literal
 
 from pocketflow import Node
+from pydantic import BaseModel, Field
 
 from .schema import NodeParameter, NodeSchema
+
+
+class PatternMatchResult(BaseModel):
+    """Result from PatternMatchNode."""
+
+    matched: bool = Field(description="Whether patterns matched based on mode")
+    matched_patterns: list[str] = Field(
+        default_factory=list, description="List of patterns that matched"
+    )
+    match_details: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="Pattern -> list of matched strings",
+    )
 
 
 class PatternMatchNode(Node):

@@ -7,17 +7,16 @@ import pytest
 from policy_evaluator.config import WorkflowConfig, ConfidenceGateConfig
 from policy_evaluator.models import (
     Criterion,
-    CriterionResult,
     ParsedPolicy,
     LogicOperator,
 )
+from policy_evaluator.nodes.criterion import CriterionResult
 
 
 @pytest.fixture
 def mock_config():
     """Return a WorkflowConfig with test defaults."""
     return WorkflowConfig(
-        model="test-model",
         temperature=0.0,
         max_retries=1,
         retry_wait=0,

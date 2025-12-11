@@ -3,7 +3,8 @@
 import pytest
 
 from policy_evaluator.nodes.confidence_gate import ConfidenceGateNode
-from policy_evaluator.models import CriterionResult, ConfidenceLevel
+from policy_evaluator.models import ConfidenceLevel
+from policy_evaluator.nodes.criterion import CriterionResult
 from policy_evaluator.config import WorkflowConfig, ConfidenceGateConfig
 
 
@@ -11,7 +12,6 @@ from policy_evaluator.config import WorkflowConfig, ConfidenceGateConfig
 def mock_config():
     """Return a WorkflowConfig with test defaults."""
     return WorkflowConfig(
-        model="test-model",
         temperature=0.0,
         max_retries=1,
         retry_wait=0,

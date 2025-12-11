@@ -18,13 +18,13 @@ from pathlib import Path
 from .models import (
     ParsedPolicy,
     Criterion,
-    CriterionResult,
-    SubCriterionResult,
     EvaluationResult,
     LogicOperator,
     ConfidenceLevel,
     YAMLMixin,
 )
+from .nodes.criterion import CriterionResult
+from .nodes.subcriterion import SubCriterionResult
 from .config import WorkflowConfig, ConfidenceGateConfig, get_config
 from .parser import parse_policy
 from .workflow import PolicyEvaluationWorkflow

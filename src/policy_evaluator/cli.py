@@ -39,7 +39,7 @@ def _build_result_from_shared(shared: dict, parsed) -> EvaluationResult:
         return shared["result"]
 
     # Otherwise build a simple result from available data
-    from .models import CriterionResult
+    from .nodes.criterion import CriterionResult
 
     # Check for common result keys
     policy_satisfied = shared.get("policy_satisfied", shared.get("satisfied", False))
@@ -107,8 +107,6 @@ def eval_cmd(
         raise typer.BadParameter("Must provide --policy or --workflow")
 
     config = WorkflowConfig()
-    if model:
-        config = WorkflowConfig(model=model)
 
     with console.status("Evaluating..."):
         if workflow:
@@ -121,7 +119,7 @@ def eval_cmd(
             result = _build_result_from_shared(shared, parsed)
         else:
             # Parse policy using dynamic workflow parser (with nodes)
-            parsed = parse_policy_to_workflow(policy.read_text(), config)
+            parsed = parse_policy_to_workflow(policy.read_text(), config, model=model)
             builder = DynamicWorkflowBuilder(parsed, config)
             shared = builder.run(text)
             result = _build_result_from_shared(shared, parsed)
@@ -161,11 +159,9 @@ def parse_cmd(
 ):
     """Parse and display policy structure (using dynamic workflow parser)."""
     config = WorkflowConfig()
-    if model:
-        config = WorkflowConfig(model=model)
 
     with console.status("Parsing policy..."):
-        parsed = parse_policy_to_workflow(policy.read_text(), config)
+        parsed = parse_policy_to_workflow(policy.read_text(), config, model=model)
 
     # Save workflow if requested
     if save_workflow:
@@ -219,8 +215,6 @@ def batch_cmd(
         raise typer.BadParameter("Must provide --inputs and --output")
 
     config = WorkflowConfig()
-    if model:
-        config = WorkflowConfig(model=model)
 
     # Load workflow
     if workflow:
@@ -228,7 +222,7 @@ def batch_cmd(
         workflow_data = yaml.safe_load(workflow.read_text())
         parsed = ParsedWorkflowPolicy.model_validate(workflow_data)
     else:
-        parsed = parse_policy_to_workflow(policy.read_text(), config)
+        parsed = parse_policy_to_workflow(policy.read_text(), config, model=model)
 
     builder = DynamicWorkflowBuilder(parsed, config)
 

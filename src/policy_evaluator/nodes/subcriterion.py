@@ -1,12 +1,27 @@
 """Sub-criterion evaluation node for PocketFlow."""
 
 from pocketflow import Node
+from pydantic import BaseModel, Field
 
 from .schema import NodeSchema
-from ..models import Criterion, SubCriterionResult, LogicOperator
+from ..models import Criterion, LogicOperator
 from ..config import WorkflowConfig
 from ..llm import call_llm
 from ..prompts import build_subcriterion_prompt
+
+
+class SubCriterionResult(BaseModel):
+    """Evaluation result for a single sub-criterion."""
+
+    sub_criterion_id: str = Field(description="ID of the sub-criterion")
+    sub_criterion_name: str = Field(description="Name of the sub-criterion")
+    met: bool = Field(description="Whether the sub-criterion is satisfied")
+    reasoning: str = Field(description="Explanation for the evaluation")
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="Confidence score 0.0-1.0",
+    )
 
 
 class SubCriterionNode(Node):
@@ -24,6 +39,9 @@ class SubCriterionNode(Node):
         - "default": Continue to next sub-criterion
     """
 
+    # Class-level default model - can be overridden per instance
+    default_model: str = "anthropic/claude-sonnet-4-20250514"
+
     parser_schema = NodeSchema(
         name="SubCriterionNode",
         description="Internal node for evaluating sub-criteria",
@@ -39,12 +57,14 @@ class SubCriterionNode(Node):
         sub_criterion: Criterion,
         sub_logic: LogicOperator,
         config: WorkflowConfig | None = None,
+        model: str | None = None,
     ):
         super().__init__(max_retries=config.max_retries if config else 3)
         self.parent_criterion = parent_criterion
         self.sub_criterion = sub_criterion
         self.sub_logic = sub_logic
         self.config = config or WorkflowConfig()
+        self.model = model if model is not None else self.default_model
 
     def prep(self, shared: dict) -> dict:
         """Prepare evaluation context."""
@@ -66,6 +86,7 @@ class SubCriterionNode(Node):
         return call_llm(
             prompt=f"Evaluate this text:\n\n{prep_res['input_text']}",
             system_prompt=prompt,
+            model=self.model,
             config=self.config,
             yaml_response=True,
             span_name=f"subcriterion_{self.parent_criterion.id}_{self.sub_criterion.id}",

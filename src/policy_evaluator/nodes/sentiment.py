@@ -2,10 +2,25 @@
 
 from typing import Literal
 
+from pydantic import BaseModel, Field
+
 from .llm_node import LLMNode
 from .schema import NodeParameter, NodeSchema
 from ..config import WorkflowConfig
 from ..templates import render
+
+
+class SentimentResult(BaseModel):
+    """Result from SentimentNode."""
+
+    label: str = Field(description="Sentiment label: positive, negative, neutral, mixed")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
+    intensity: str | None = Field(
+        default=None, description="Intensity: strong, moderate, weak (detailed mode)"
+    )
+    emotions: list[str] = Field(
+        default_factory=list, description="Detected emotions (detailed mode)"
+    )
 
 
 class SentimentNode(LLMNode):
@@ -55,6 +70,7 @@ class SentimentNode(LLMNode):
     def __init__(
         self,
         config: WorkflowConfig,
+        model: str | None = None,
         granularity: Literal["basic", "detailed"] = "basic",
         input_key: str = "input_text",
         cache_ttl: int = 3600,
@@ -65,12 +81,13 @@ class SentimentNode(LLMNode):
 
         Args:
             config: Workflow configuration
+            model: LLM model identifier (uses class default_model if not provided)
             granularity: Analysis detail level ("basic" or "detailed")
             input_key: Key to read input text from shared store
             cache_ttl: Cache time-to-live in seconds (0 = disabled)
             rate_limit: Requests per minute (None = unlimited)
         """
-        super().__init__(config=config, cache_ttl=cache_ttl, rate_limit=rate_limit)
+        super().__init__(config=config, model=model, cache_ttl=cache_ttl, rate_limit=rate_limit)
         self.granularity = granularity
         self.input_key = input_key
 

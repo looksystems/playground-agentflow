@@ -1,8 +1,17 @@
 """Length gate node for routing based on input length thresholds."""
 
 from pocketflow import Node
+from pydantic import BaseModel, Field
 
 from .schema import NodeParameter, NodeSchema
+
+
+class LengthInfo(BaseModel):
+    """Result from LengthGateNode."""
+
+    char_count: int = Field(description="Character count")
+    word_count: int = Field(description="Word count")
+    bucket: str = Field(description="Length bucket name")
 
 
 class LengthGateNode(Node):

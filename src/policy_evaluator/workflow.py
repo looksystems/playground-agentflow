@@ -9,11 +9,11 @@ from .models import (
     ParsedPolicy,
     Criterion,
     EvaluationResult,
-    CriterionResult,
-    SubCriterionResult,
     LogicOperator,
     ConfidenceLevel,
 )
+from .nodes.criterion import CriterionResult
+from .nodes.subcriterion import SubCriterionResult
 from .config import WorkflowConfig
 from .nodes import (
     CriterionEvaluationNode,

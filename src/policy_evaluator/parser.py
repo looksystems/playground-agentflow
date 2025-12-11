@@ -5,10 +5,14 @@ from .config import WorkflowConfig
 from .llm import call_llm
 from .prompts import get_criteria_parser_prompt, get_workflow_parser_prompt
 
+# Default model for parsing operations
+DEFAULT_PARSER_MODEL = "anthropic/claude-sonnet-4-20250514"
+
 
 def parse_policy(
     policy_markdown: str,
     config: WorkflowConfig | None = None,
+    model: str | None = None,
 ) -> ParsedPolicy:
     """
     Parse a markdown policy document into structured criteria.
@@ -19,15 +23,18 @@ def parse_policy(
     Args:
         policy_markdown: Raw markdown text of the policy
         config: Optional workflow configuration
+        model: LLM model identifier (uses DEFAULT_PARSER_MODEL if not provided)
 
     Returns:
         ParsedPolicy with extracted criteria and logic
     """
     config = config or WorkflowConfig()
+    model = model or DEFAULT_PARSER_MODEL
 
     data = call_llm(
         prompt=f"Parse this policy:\n\n{policy_markdown}",
         system_prompt=get_criteria_parser_prompt(),
+        model=model,
         config=config,
         yaml_response=True,
         span_name="parse_policy_criteria",
@@ -39,6 +46,7 @@ def parse_policy(
 def parse_policy_to_workflow(
     policy_markdown: str,
     config: WorkflowConfig | None = None,
+    model: str | None = None,
 ) -> ParsedWorkflowPolicy:
     """
     Parse a markdown policy document into a dynamic workflow definition.
@@ -53,6 +61,7 @@ def parse_policy_to_workflow(
     Args:
         policy_markdown: Raw markdown text of the policy
         config: Optional workflow configuration
+        model: LLM model identifier (uses DEFAULT_PARSER_MODEL if not provided)
 
     Returns:
         ParsedWorkflowPolicy with workflow definition ready for execution
@@ -71,10 +80,12 @@ def parse_policy_to_workflow(
         >>> result = builder.run("Check this user message")
     """
     config = config or WorkflowConfig()
+    model = model or DEFAULT_PARSER_MODEL
 
     data = call_llm(
         prompt=f"Parse this policy and generate a workflow:\n\n{policy_markdown}",
         system_prompt=get_workflow_parser_prompt(),
+        model=model,
         config=config,
         yaml_response=True,
         span_name="parse_policy_to_workflow",

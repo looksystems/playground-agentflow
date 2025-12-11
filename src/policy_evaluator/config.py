@@ -102,12 +102,6 @@ class PhoenixConfig(BaseModel):
 class WorkflowConfig(BaseModel):
     """Configuration for the evaluation workflow."""
 
-    model: str = Field(
-        default_factory=lambda: os.getenv(
-            "POLICY_EVAL_MODEL", "anthropic/claude-sonnet-4-20250514"
-        ),
-        description="LiteLLM model identifier",
-    )
     temperature: float = Field(
         default_factory=lambda: float(os.getenv("POLICY_EVAL_TEMPERATURE", "0.0")),
         description="LLM temperature",

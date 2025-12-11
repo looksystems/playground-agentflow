@@ -3,9 +3,9 @@
 from pocketflow import Node
 
 from .schema import NodeSchema
+from .criterion import CriterionResult
 from ..models import (
     ParsedPolicy,
-    CriterionResult,
     EvaluationResult,
     LogicOperator,
 )

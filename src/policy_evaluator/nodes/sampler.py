@@ -2,9 +2,22 @@
 
 from typing import Literal
 
+from pydantic import BaseModel, Field
+
 from .llm_node import LLMNode
 from .schema import NodeParameter, NodeSchema
 from ..config import WorkflowConfig
+
+
+class SampleResults(BaseModel):
+    """Result from SamplerNode."""
+
+    individual_results: list[bool] = Field(description="Results from each sample")
+    aggregated_result: bool = Field(description="Final aggregated result")
+    agreement_ratio: float = Field(
+        ge=0.0, le=1.0, description="Ratio of samples that agree"
+    )
+    action: str = Field(description="Action: consensus, majority, or split")
 
 
 class SamplerNode(LLMNode):
@@ -68,6 +81,7 @@ class SamplerNode(LLMNode):
         aggregation: Literal["majority", "unanimous", "any"],
         inner_prompt: str,
         config: WorkflowConfig,
+        model: str | None = None,
         input_key: str = "input_text",
         system_prompt: str | None = None,
         cache_ttl: int = 0,  # Default: disable caching for sampling
@@ -84,12 +98,13 @@ class SamplerNode(LLMNode):
                 - "any": True if any sample returns True
             inner_prompt: The evaluation prompt to run multiple times
             config: Workflow configuration
+            model: LLM model identifier (uses class default_model if not provided)
             input_key: Key to read from shared store (default: "input_text")
             system_prompt: Optional system prompt for the LLM
             cache_ttl: Cache TTL in seconds (default: 0 = disabled for sampling)
             rate_limit: Requests per minute limit (default: None = unlimited)
         """
-        super().__init__(config=config, cache_ttl=cache_ttl, rate_limit=rate_limit)
+        super().__init__(config=config, model=model, cache_ttl=cache_ttl, rate_limit=rate_limit)
         self.n_samples = n_samples
         self.aggregation = aggregation
         self.inner_prompt = inner_prompt

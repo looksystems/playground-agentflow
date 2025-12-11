@@ -48,6 +48,7 @@ def _init_tracing(config: WorkflowConfig) -> None:
 def call_llm(
     prompt: str,
     system_prompt: str | None = None,
+    model: str | None = None,
     config: WorkflowConfig | None = None,
     yaml_response: bool = True,
     span_name: str | None = None,
@@ -58,13 +59,20 @@ def call_llm(
     Args:
         prompt: The user prompt
         system_prompt: Optional system prompt
+        model: LLM model identifier (required - no global fallback)
         config: Workflow configuration
         yaml_response: Whether to parse response as YAML
         span_name: Optional name for the trace span (for observability)
 
     Returns:
         Parsed YAML dict or raw string response
+
+    Raises:
+        ValueError: If model is not provided
     """
+    if model is None:
+        raise ValueError("model parameter is required - no global fallback")
+
     config = config or WorkflowConfig()
 
     # Initialize Phoenix tracing if enabled
@@ -76,7 +84,7 @@ def call_llm(
     messages.append({"role": "user", "content": prompt})
 
     kwargs = {
-        "model": config.model,
+        "model": model,
         "messages": messages,
         "temperature": config.temperature,
     }

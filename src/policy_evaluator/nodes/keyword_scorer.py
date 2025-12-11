@@ -1,9 +1,22 @@
 """Keyword scoring node for deterministic input scoring."""
 
 import re
+
 from pocketflow import Node
+from pydantic import BaseModel, Field
 
 from .schema import NodeParameter, NodeSchema
+
+
+class KeywordScoreResult(BaseModel):
+    """Result from KeywordScorerNode."""
+
+    score: float = Field(description="Total weighted score")
+    level: str = Field(description="Score level: high, medium, or low")
+    matched_keywords: dict[str, float] = Field(
+        default_factory=dict,
+        description="Keyword -> weight for matched keywords",
+    )
 
 
 class KeywordScorerNode(Node):

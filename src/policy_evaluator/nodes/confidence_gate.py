@@ -3,7 +3,8 @@
 from pocketflow import Node
 
 from .schema import NodeSchema
-from ..models import CriterionResult, ConfidenceLevel
+from .criterion import CriterionResult
+from ..models import ConfidenceLevel
 from ..config import WorkflowConfig, ConfidenceGateConfig
 
 

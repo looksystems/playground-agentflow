@@ -1,11 +1,16 @@
 """Pydantic data models for policy evaluation."""
 
+from __future__ import annotations
+
 from enum import Enum
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 import yaml
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from .nodes.criterion import CriterionResult
 
 
 class YAMLMixin:
@@ -76,108 +81,12 @@ class ParsedPolicy(YAMLMixin, BaseModel):
     raw_text: str = Field(description="Original policy markdown text")
 
 
-class SubCriterionResult(BaseModel):
-    """Evaluation result for a single sub-criterion."""
-
-    sub_criterion_id: str = Field(description="ID of the sub-criterion")
-    sub_criterion_name: str = Field(description="Name of the sub-criterion")
-    met: bool = Field(description="Whether the sub-criterion is satisfied")
-    reasoning: str = Field(description="Explanation for the evaluation")
-    confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Confidence score 0.0-1.0",
-    )
-
-
-class CriterionResult(BaseModel):
-    """Evaluation result for a single criterion."""
-
-    criterion_id: str = Field(description="ID of the evaluated criterion")
-    criterion_name: str = Field(description="Name of the criterion")
-    met: bool = Field(description="Whether the criterion is satisfied")
-    reasoning: str = Field(description="Explanation for the evaluation")
-    confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Confidence score 0.0-1.0",
-    )
-    sub_results: list[SubCriterionResult] = Field(
-        default_factory=list,
-        description="Results for sub-criteria if any",
-    )
-
-
 class ConfidenceLevel(str, Enum):
     """Confidence level classification."""
 
     HIGH = "high"  # Above high threshold
     MEDIUM = "medium"  # Between thresholds
     LOW = "low"  # Below low threshold
-
-
-class PatternMatchResult(BaseModel):
-    """Result from PatternMatchNode."""
-
-    matched: bool = Field(description="Whether patterns matched based on mode")
-    matched_patterns: list[str] = Field(
-        default_factory=list, description="List of patterns that matched"
-    )
-    match_details: dict[str, list[str]] = Field(
-        default_factory=dict,
-        description="Pattern -> list of matched strings",
-    )
-
-
-class KeywordScoreResult(BaseModel):
-    """Result from KeywordScorerNode."""
-
-    score: float = Field(description="Total weighted score")
-    level: str = Field(description="Score level: high, medium, or low")
-    matched_keywords: dict[str, float] = Field(
-        default_factory=dict,
-        description="Keyword -> weight for matched keywords",
-    )
-
-
-class LengthInfo(BaseModel):
-    """Result from LengthGateNode."""
-
-    char_count: int = Field(description="Character count")
-    word_count: int = Field(description="Word count")
-    bucket: str = Field(description="Length bucket name")
-
-
-class ClassificationResult(BaseModel):
-    """Result from ClassifierNode."""
-
-    category: str = Field(description="Classified category")
-    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
-    reasoning: str = Field(default="", description="Explanation for classification")
-
-
-class SentimentResult(BaseModel):
-    """Result from SentimentNode."""
-
-    label: str = Field(description="Sentiment label: positive, negative, neutral, mixed")
-    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
-    intensity: str | None = Field(
-        default=None, description="Intensity: strong, moderate, weak (detailed mode)"
-    )
-    emotions: list[str] = Field(
-        default_factory=list, description="Detected emotions (detailed mode)"
-    )
-
-
-class SampleResults(BaseModel):
-    """Result from SamplerNode."""
-
-    individual_results: list[bool] = Field(description="Results from each sample")
-    aggregated_result: bool = Field(description="Final aggregated result")
-    agreement_ratio: float = Field(
-        ge=0.0, le=1.0, description="Ratio of samples that agree"
-    )
-    action: str = Field(description="Action: consensus, majority, or split")
 
 
 class EvaluationResult(YAMLMixin, BaseModel):
@@ -245,3 +154,12 @@ class ParsedWorkflowPolicy(YAMLMixin, BaseModel):
     description: str = Field(description="Policy description")
     workflow: WorkflowDefinition = Field(description="Workflow configuration")
     raw_text: str = Field(default="", description="Original policy markdown")
+
+
+def _rebuild_models():
+    """Rebuild models that use forward references from node modules."""
+    from .nodes.criterion import CriterionResult
+    EvaluationResult.model_rebuild()
+
+
+_rebuild_models()

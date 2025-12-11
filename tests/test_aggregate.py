@@ -5,10 +5,10 @@ import pytest
 from policy_evaluator.nodes.aggregate import ResultAggregatorNode
 from policy_evaluator.models import (
     Criterion,
-    CriterionResult,
     ParsedPolicy,
     LogicOperator,
 )
+from policy_evaluator.nodes.criterion import CriterionResult
 
 
 @pytest.fixture

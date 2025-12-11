@@ -1,9 +1,19 @@
 """Classifier node for LLM-based text classification."""
 
+from pydantic import BaseModel, Field
+
 from .llm_node import LLMNode
 from .schema import NodeParameter, NodeSchema
 from ..config import WorkflowConfig
 from ..templates import render
+
+
+class ClassificationResult(BaseModel):
+    """Result from ClassifierNode."""
+
+    category: str = Field(description="Classified category")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")
+    reasoning: str = Field(default="", description="Explanation for classification")
 
 
 class ClassifierNode(LLMNode):
@@ -63,6 +73,7 @@ class ClassifierNode(LLMNode):
         self,
         categories: list[str],
         config: WorkflowConfig,
+        model: str | None = None,
         descriptions: dict[str, str] | None = None,
         cache_ttl: int = 3600,
         rate_limit: int | None = None,
@@ -73,11 +84,12 @@ class ClassifierNode(LLMNode):
         Args:
             categories: List of category names (e.g., ["spam", "legitimate", "unclear"])
             config: Workflow configuration
+            model: LLM model identifier (uses class default_model if not provided)
             descriptions: Optional per-category guidance for the LLM
             cache_ttl: Cache time-to-live in seconds (default: 3600)
             rate_limit: Requests per minute limit (default: None = unlimited)
         """
-        super().__init__(config=config, cache_ttl=cache_ttl, rate_limit=rate_limit)
+        super().__init__(config=config, model=model, cache_ttl=cache_ttl, rate_limit=rate_limit)
 
         if not categories:
             raise ValueError("At least one category must be provided")
