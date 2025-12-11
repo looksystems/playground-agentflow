@@ -38,6 +38,25 @@ POLICY_EVAL_CONFIDENCE_HIGH=0.8   # Above this = high confidence
 POLICY_EVAL_CONFIDENCE_LOW=0.5    # Below this = needs review
 ```
 
+### All Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `POLICY_EVAL_MODEL` | `anthropic/claude-sonnet-4-20250514` | LiteLLM model identifier |
+| `POLICY_EVAL_TEMPERATURE` | `0.0` | LLM temperature for evaluation |
+| `POLICY_EVAL_CONFIDENCE_HIGH` | `0.8` | High confidence threshold |
+| `POLICY_EVAL_CONFIDENCE_LOW` | `0.5` | Low confidence threshold (below = needs review) |
+| `POLICY_EVAL_MAX_RETRIES` | `3` | Max retry attempts per LLM call |
+| `POLICY_EVAL_RETRY_WAIT` | `2` | Seconds between retries |
+| `POLICY_EVAL_CACHE_ENABLED` | `true` | Enable LLM response caching |
+| `POLICY_EVAL_CACHE_TTL` | `3600` | Cache TTL in seconds (0 = no expiration) |
+| `POLICY_EVAL_CACHE_DIR` | `.cache` | Directory for cache files |
+| `POLICY_EVAL_THROTTLE_ENABLED` | `false` | Enable rate limiting |
+| `POLICY_EVAL_THROTTLE_RPM` | `60` | Max requests per minute |
+| `PHOENIX_ENABLED` | `false` | Enable Arize Phoenix tracing |
+| `PHOENIX_COLLECTOR_ENDPOINT` | `http://localhost:6007` | Phoenix collector URL |
+| `PHOENIX_PROJECT_NAME` | `policyflowuator` | Project name in Phoenix UI |
+
 ## Usage
 
 ### CLI
@@ -249,6 +268,49 @@ result = evaluate(
 )
 ```
 
+### API Reference
+
+The main package exports the following:
+
+#### Functions
+
+| Function | Description |
+|----------|-------------|
+| `evaluate()` | Main entry point - evaluate text against a policy |
+| `parse_policy()` | Parse policy markdown into a `ParsedPolicy` object |
+| `get_config()` | Get current `WorkflowConfig` from environment |
+
+#### Classes
+
+| Class | Description |
+|-------|-------------|
+| `PolicyEvaluationWorkflow` | Workflow runner for evaluating text against a parsed policy |
+| `WorkflowConfig` | Configuration for evaluation (model, retries, cache, etc.) |
+| `ConfidenceGateConfig` | Confidence threshold configuration |
+
+#### Data Models
+
+| Model | Description |
+|-------|-------------|
+| `ParsedPolicy` | Parsed policy structure with criteria |
+| `Criterion` | A single criterion from a policy |
+| `EvaluationResult` | Complete evaluation result |
+| `CriterionResult` | Result for a single criterion |
+| `SubCriterionResult` | Result for a sub-criterion |
+
+#### Enums
+
+| Enum | Values | Description |
+|------|--------|-------------|
+| `LogicOperator` | `ALL`, `ANY` | How criteria combine (AND/OR) |
+| `ConfidenceLevel` | `HIGH`, `MEDIUM`, `LOW` | Confidence classification |
+
+#### Utilities
+
+| Utility | Description |
+|---------|-------------|
+| `YAMLMixin` | Mixin providing `to_yaml()`, `from_yaml()`, `save_yaml()`, `load_yaml()` |
+
 ## Architecture
 
 The evaluator uses a dynamic workflow built with PocketFlow:
@@ -310,6 +372,96 @@ EvaluationResult:
           confidence: float
       ]
   ]
+```
+
+## Advanced Usage
+
+### Direct Workflow Control
+
+For more control over the evaluation process:
+
+```python
+from policyflow import parse_policy, PolicyEvaluationWorkflow, WorkflowConfig
+
+# Parse policy separately (useful for caching)
+policy_text = open("policy.md").read()
+parsed_policy = parse_policy(policy_text)
+
+# Create workflow and run multiple evaluations
+config = WorkflowConfig()
+workflow = PolicyEvaluationWorkflow(parsed_policy, config)
+
+texts = ["First text to evaluate", "Second text to evaluate"]
+results = [workflow.run(text) for text in texts]
+```
+
+### Working with Parsed Policies
+
+```python
+from policyflow import parse_policy, LogicOperator
+
+policy = parse_policy(open("policy.md").read())
+
+print(f"Policy: {policy.title}")
+print(f"Logic: {policy.logic}")  # LogicOperator.ALL or LogicOperator.ANY
+
+for criterion in policy.criteria:
+    print(f"  {criterion.id}: {criterion.name}")
+    if criterion.sub_criteria:
+        print(f"    Sub-logic: {criterion.sub_logic}")
+        for sub in criterion.sub_criteria:
+            print(f"      - {sub.name}")
+```
+
+### YAML Serialization
+
+All data models support YAML serialization via `YAMLMixin`:
+
+```python
+from policyflow import parse_policy, evaluate
+
+# Save parsed policy for reuse
+policy = parse_policy(open("policy.md").read())
+policy.save_yaml("parsed_policy.yaml")
+
+# Save evaluation results
+result = evaluate(input_text="...", policy_path="policy.md")
+result.save_yaml("evaluation_result.yaml")
+
+# Load from YAML
+from policyflow import ParsedPolicy, EvaluationResult
+policy = ParsedPolicy.load_yaml("parsed_policy.yaml")
+result = EvaluationResult.load_yaml("evaluation_result.yaml")
+```
+
+### Available Node Types
+
+The workflow system includes 13 node types for building custom evaluation pipelines:
+
+| Node | Description |
+|------|-------------|
+| `LLMNode` | Base node for LLM-powered evaluation |
+| `CriterionEvaluationNode` | Evaluates a single criterion |
+| `SubCriterionNode` | Evaluates sub-criteria with early termination |
+| `ConfidenceGateNode` | Routes based on confidence thresholds |
+| `ResultAggregatorNode` | Combines results with policy logic |
+| `TransformNode` | Transforms input text (lowercase, truncate, etc.) |
+| `LengthGateNode` | Routes based on text length |
+| `KeywordScorerNode` | Scores text based on keyword presence |
+| `PatternMatchNode` | Matches text against regex patterns |
+| `DataExtractorNode` | Extracts structured data from text |
+| `SamplerNode` | Samples or chunks text for processing |
+| `ClassifierNode` | Classifies text into categories |
+| `SentimentNode` | Analyzes text sentiment |
+
+Access nodes via:
+```python
+from policyflow.nodes import (
+    CriterionEvaluationNode,
+    PatternMatchNode,
+    ClassifierNode,
+    # ... etc
+)
 ```
 
 ## Observability (Optional)
