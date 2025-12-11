@@ -22,7 +22,7 @@ docker-compose up -d phoenix
 export PHOENIX_ENABLED=true
 
 # 4. Run evaluation (traces sent to Phoenix)
-uv run policy-eval eval -p policy.md -i "text to evaluate"
+uv run policyflow eval -p policy.md -i "text to evaluate"
 
 # 5. View traces at http://localhost:6007
 ```
@@ -35,13 +35,13 @@ Environment variables (set in `.env` or export):
 |----------|---------|-------------|
 | `PHOENIX_ENABLED` | `false` | Set to `true` to enable tracing |
 | `PHOENIX_COLLECTOR_ENDPOINT` | `http://localhost:6007` | Phoenix OTLP HTTP endpoint |
-| `PHOENIX_PROJECT_NAME` | `policy-evaluator` | Project name in Phoenix UI |
+| `PHOENIX_PROJECT_NAME` | `policyflowuator` | Project name in Phoenix UI |
 
 ## Architecture
 
 ```
 ┌─────────────────┐     OTLP/HTTP      ┌─────────────────┐
-│  policy-eval    │ ─────────────────► │     Phoenix     │
+│  policyflow    │ ─────────────────► │     Phoenix     │
 │  (LiteLLM)      │                    │   (port 6007)   │
 └─────────────────┘                    └─────────────────┘
         │                                      │

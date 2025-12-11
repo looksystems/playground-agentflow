@@ -28,7 +28,7 @@ tracing = [
 ]
 
 [project.scripts]
-policy-eval = "policyflow.cli:main"
+policyflow = "policyflow.cli:main"
 
 [build-system]
 requires = ["hatchling"]

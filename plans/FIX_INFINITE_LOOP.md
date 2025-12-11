@@ -1,4 +1,4 @@
-# Fix: Infinite Loop in policy-eval eval Command
+# Fix: Infinite Loop in policyflow eval Command
 
 **Status: IMPLEMENTED** (2025-12-11)
 

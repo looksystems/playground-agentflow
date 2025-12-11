@@ -2,10 +2,10 @@
 CLI interface for policy evaluation.
 
 Usage:
-    policy-eval eval --policy policy.md --input "text to evaluate"
-    policy-eval eval --policy policy.md --input-file input.txt
-    policy-eval eval --workflow workflow.yaml --input "text to evaluate"
-    policy-eval parse --policy policy.md --save-workflow workflow.yaml
+    policyflow eval --policy policy.md --input "text to evaluate"
+    policyflow eval --policy policy.md --input-file input.txt
+    policyflow eval --workflow workflow.yaml --input "text to evaluate"
+    policyflow parse --policy policy.md --save-workflow workflow.yaml
 """
 
 from pathlib import Path
@@ -22,7 +22,7 @@ from .parser import parse_policy_to_workflow
 from .workflow_builder import DynamicWorkflowBuilder
 
 app = typer.Typer(
-    name="policy-eval",
+    name="policyflow",
     help="Generic policy evaluator using LLM-powered workflows",
 )
 console = Console()

@@ -31,13 +31,13 @@ ParsedWorkflowPolicyV2 (YAML)
 
 ```bash
 # Step 1: Normalize policy document
-policy-eval normalize --policy policy.md --output normalized.yaml
+policyflow normalize --policy policy.md --output normalized.yaml
 
 # Step 2: Generate workflow from normalized document
-policy-eval generate-workflow --normalized normalized.yaml --output workflow.yaml
+policyflow generate-workflow --normalized normalized.yaml --output workflow.yaml
 
 # Both steps combined
-policy-eval parse-two-step --policy policy.md --output-dir ./output/
+policyflow parse-two-step --policy policy.md --output-dir ./output/
 ```
 
 ### Python API

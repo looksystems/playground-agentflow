@@ -253,27 +253,27 @@ policy = ParsedPolicy.from_yaml(yaml_str) # Parse from string
 
 ```bash
 # Evaluate text
-policy-eval eval --policy policy.md --input "text to evaluate"
-policy-eval eval --policy policy.md --input-file input.txt
+policyflow eval --policy policy.md --input "text to evaluate"
+policyflow eval --policy policy.md --input-file input.txt
 
 # Parse and show policy structure
-policy-eval parse --policy policy.md
+policyflow parse --policy policy.md
 
 # Batch processing (YAML input/output)
-policy-eval batch --policy policy.md --inputs texts.yaml --output results.yaml
+policyflow batch --policy policy.md --inputs texts.yaml --output results.yaml
 
 # Override model
-policy-eval eval --policy policy.md --input "..." --model openai/gpt-4o
+policyflow eval --policy policy.md --input "..." --model openai/gpt-4o
 
 # Output as YAML
-policy-eval eval --policy policy.md --input "..." --format yaml
+policyflow eval --policy policy.md --input "..." --format yaml
 
 # Save workflow to YAML for caching
-policy-eval parse --policy policy.md --save-workflow workflow.yaml
+policyflow parse --policy policy.md --save-workflow workflow.yaml
 
 # Load cached workflow (skips policy parsing)
-policy-eval eval --workflow workflow.yaml --input "text to evaluate"
-policy-eval batch --workflow workflow.yaml --inputs texts.yaml --output results.yaml
+policyflow eval --workflow workflow.yaml --input "text to evaluate"
+policyflow batch --workflow workflow.yaml --inputs texts.yaml --output results.yaml
 ```
 
 ## Workflow Caching
@@ -282,10 +282,10 @@ Parsed policies can be saved as YAML files to skip the LLM parsing step on subse
 
 ```bash
 # Parse once, save workflow
-policy-eval parse -p policy.md --save-workflow workflow.yaml
+policyflow parse -p policy.md --save-workflow workflow.yaml
 
 # Reuse cached workflow
-policy-eval eval -w workflow.yaml -i "text"
+policyflow eval -w workflow.yaml -i "text"
 ```
 
 Benefits:

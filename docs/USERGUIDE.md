@@ -20,10 +20,10 @@ A generic policy evaluation tool that uses LLM-powered workflows to check if tex
 
 ```bash
 # Using uv (recommended)
-uv add policy-evaluator
+uv add policyflowuator
 
 # Using pip
-pip install policy-evaluator
+pip install policyflowuator
 ```
 
 ### Requirements
@@ -57,7 +57,7 @@ A compliant message must:
 ### 3. Evaluate text
 
 ```bash
-policy-eval eval -p policy.md -i "This investment could lose value. Past performance is not indicative of future results."
+policyflow eval -p policy.md -i "This investment could lose value. Past performance is not indicative of future results."
 ```
 
 ## Writing Policies
@@ -121,7 +121,7 @@ A personal recommendation is one that:
 ### eval - Evaluate text against a policy
 
 ```bash
-policy-eval eval [OPTIONS]
+policyflow eval [OPTIONS]
 ```
 
 **Options:**
@@ -138,25 +138,25 @@ policy-eval eval [OPTIONS]
 **Examples:**
 ```bash
 # Basic evaluation
-policy-eval eval -p policy.md -i "Your text here"
+policyflow eval -p policy.md -i "Your text here"
 
 # Read input from file
-policy-eval eval -p policy.md -f input.txt
+policyflow eval -p policy.md -f input.txt
 
 # Use cached workflow
-policy-eval eval -w workflow.yaml -i "Your text here"
+policyflow eval -w workflow.yaml -i "Your text here"
 
 # Output as YAML
-policy-eval eval -p policy.md -i "Text" --format yaml
+policyflow eval -p policy.md -i "Text" --format yaml
 
 # Use a specific model
-policy-eval eval -p policy.md -i "Text" -m openai/gpt-4o
+policyflow eval -p policy.md -i "Text" -m openai/gpt-4o
 ```
 
 ### parse - Parse and display policy structure
 
 ```bash
-policy-eval parse [OPTIONS]
+policyflow parse [OPTIONS]
 ```
 
 **Options:**
@@ -170,19 +170,19 @@ policy-eval parse [OPTIONS]
 **Examples:**
 ```bash
 # View parsed structure
-policy-eval parse -p policy.md
+policyflow parse -p policy.md
 
 # Save workflow for later use
-policy-eval parse -p policy.md --save-workflow workflow.yaml
+policyflow parse -p policy.md --save-workflow workflow.yaml
 
 # Output as YAML
-policy-eval parse -p policy.md --format yaml
+policyflow parse -p policy.md --format yaml
 ```
 
 ### batch - Batch evaluate multiple inputs
 
 ```bash
-policy-eval batch [OPTIONS]
+policyflow batch [OPTIONS]
 ```
 
 **Options:**
@@ -203,13 +203,13 @@ policy-eval batch [OPTIONS]
 
 **Example:**
 ```bash
-policy-eval batch -w workflow.yaml --inputs texts.yaml -o results.yaml
+policyflow batch -w workflow.yaml --inputs texts.yaml -o results.yaml
 ```
 
 ### normalize - Normalize policy document (Step 1)
 
 ```bash
-policy-eval normalize [OPTIONS]
+policyflow normalize [OPTIONS]
 ```
 
 **Options:**
@@ -223,13 +223,13 @@ policy-eval normalize [OPTIONS]
 **Example:**
 ```bash
 # Normalize a policy into structured format
-policy-eval normalize -p policy.md -o normalized.yaml
+policyflow normalize -p policy.md -o normalized.yaml
 ```
 
 ### generate-workflow - Generate workflow from normalized policy (Step 2)
 
 ```bash
-policy-eval generate-workflow [OPTIONS]
+policyflow generate-workflow [OPTIONS]
 ```
 
 **Options:**
@@ -243,13 +243,13 @@ policy-eval generate-workflow [OPTIONS]
 **Example:**
 ```bash
 # Generate workflow from normalized policy
-policy-eval generate-workflow -n normalized.yaml -o workflow.yaml
+policyflow generate-workflow -n normalized.yaml -o workflow.yaml
 ```
 
 ### parse-two-step - Complete two-step parsing
 
 ```bash
-policy-eval parse-two-step [OPTIONS]
+policyflow parse-two-step [OPTIONS]
 ```
 
 **Options:**
@@ -263,7 +263,7 @@ policy-eval parse-two-step [OPTIONS]
 **Example:**
 ```bash
 # Parse policy in two steps, saving both artifacts
-policy-eval parse-two-step -p policy.md -d ./output/
+policyflow parse-two-step -p policy.md -d ./output/
 # Creates: ./output/policy_normalized.yaml and ./output/policy_workflow.yaml
 ```
 
@@ -535,13 +535,13 @@ Any model supported by [LiteLLM](https://docs.litellm.ai/docs/providers) can be 
 
 ```bash
 # Anthropic
-policy-eval eval -p policy.md -i "text" -m anthropic/claude-sonnet-4-20250514
+policyflow eval -p policy.md -i "text" -m anthropic/claude-sonnet-4-20250514
 
 # OpenAI
-policy-eval eval -p policy.md -i "text" -m openai/gpt-4o
+policyflow eval -p policy.md -i "text" -m openai/gpt-4o
 
 # Azure OpenAI
-policy-eval eval -p policy.md -i "text" -m azure/gpt-4
+policyflow eval -p policy.md -i "text" -m azure/gpt-4
 ```
 
 ## Workflow Caching
@@ -559,12 +559,12 @@ Caching workflows improves performance and consistency by skipping the policy pa
 
 ```bash
 # Step 1: Parse policy once and save
-policy-eval parse -p policy.md --save-workflow workflow.yaml
+policyflow parse -p policy.md --save-workflow workflow.yaml
 
 # Step 2: Use cached workflow for all subsequent evaluations
-policy-eval eval -w workflow.yaml -i "text 1"
-policy-eval eval -w workflow.yaml -i "text 2"
-policy-eval batch -w workflow.yaml --inputs texts.yaml -o results.yaml
+policyflow eval -w workflow.yaml -i "text 1"
+policyflow eval -w workflow.yaml -i "text 2"
+policyflow batch -w workflow.yaml --inputs texts.yaml -o results.yaml
 ```
 
 ### When to Regenerate

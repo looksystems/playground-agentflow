@@ -43,19 +43,19 @@ POLICY_EVAL_CONFIDENCE_LOW=0.5    # Below this = needs review
 
 ```bash
 # Evaluate text against a policy
-uv run policy-eval eval --policy policy.md --input "text to evaluate"
+uv run policyflow eval --policy policy.md --input "text to evaluate"
 
 # Evaluate from file
-uv run policy-eval eval --policy policy.md --input-file input.txt
+uv run policyflow eval --policy policy.md --input-file input.txt
 
 # Parse and display policy structure
-uv run policy-eval parse --policy policy.md
+uv run policyflow parse --policy policy.md
 
 # Batch processing
-uv run policy-eval batch --policy policy.md --inputs texts.jsonl --output results.jsonl
+uv run policyflow batch --policy policy.md --inputs texts.jsonl --output results.jsonl
 
 # Use a different model
-uv run policy-eval eval --policy policy.md --input "..." --model openai/gpt-4o
+uv run policyflow eval --policy policy.md --input "..." --model openai/gpt-4o
 ```
 
 ### Python API
@@ -182,7 +182,7 @@ uv pip install -e ".[tracing]"
 docker-compose up -d phoenix
 
 # Enable tracing and run
-PHOENIX_ENABLED=true uv run policy-eval eval -p policy.md -i "text"
+PHOENIX_ENABLED=true uv run policyflow eval -p policy.md -i "text"
 
 # View traces at http://localhost:6007
 ```
