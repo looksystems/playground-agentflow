@@ -42,20 +42,161 @@ POLICY_EVAL_CONFIDENCE_LOW=0.5    # Below this = needs review
 ### CLI
 
 ```bash
-# Evaluate text against a policy
-uv run policyflow eval --policy policy.md --input "text to evaluate"
+uv run policyflow [COMMAND] [OPTIONS]
+```
+
+#### Commands
+
+##### `eval` - Evaluate text against a policy
+
+```bash
+uv run policyflow eval [OPTIONS]
+```
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--policy PATH` | `-p` | Path to policy markdown file |
+| `--workflow PATH` | `-w` | Path to pre-parsed workflow YAML (alternative to --policy) |
+| `--input TEXT` | `-i` | Text to evaluate |
+| `--input-file PATH` | `-f` | File containing text to evaluate |
+| `--model TEXT` | `-m` | LiteLLM model identifier (e.g., `openai/gpt-4o`) |
+| `--format TEXT` | | Output format: `pretty`, `yaml`, or `minimal` (default: `pretty`) |
+| `--save-workflow PATH` | | Save parsed workflow to YAML file for reuse |
+
+Examples:
+```bash
+# Evaluate inline text
+uv run policyflow eval -p policy.md -i "text to evaluate"
 
 # Evaluate from file
-uv run policyflow eval --policy policy.md --input-file input.txt
+uv run policyflow eval -p policy.md -f input.txt
 
-# Parse and display policy structure
-uv run policyflow parse --policy policy.md
+# Use a pre-parsed workflow (faster for repeated evaluations)
+uv run policyflow eval -w workflow.yaml -i "text to evaluate"
 
-# Batch processing
-uv run policyflow batch --policy policy.md --inputs texts.jsonl --output results.jsonl
+# Use a different model and save the workflow
+uv run policyflow eval -p policy.md -i "text" -m openai/gpt-4o --save-workflow workflow.yaml
 
-# Use a different model
-uv run policyflow eval --policy policy.md --input "..." --model openai/gpt-4o
+# Get minimal output (just pass/fail and confidence)
+uv run policyflow eval -p policy.md -i "text" --format minimal
+```
+
+##### `parse` - Parse and display policy structure
+
+```bash
+uv run policyflow parse [OPTIONS]
+```
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--policy PATH` | `-p` | Path to policy markdown file (required) |
+| `--model TEXT` | `-m` | LiteLLM model identifier |
+| `--save-workflow PATH` | | Save parsed workflow to YAML file |
+| `--format TEXT` | | Output format: `pretty` or `yaml` (default: `pretty`) |
+
+Examples:
+```bash
+# Display policy structure
+uv run policyflow parse -p policy.md
+
+# Save workflow for later use
+uv run policyflow parse -p policy.md --save-workflow workflow.yaml
+
+# Output as YAML
+uv run policyflow parse -p policy.md --format yaml
+```
+
+##### `batch` - Batch evaluate multiple inputs
+
+```bash
+uv run policyflow batch [OPTIONS]
+```
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--policy PATH` | `-p` | Path to policy markdown file |
+| `--workflow PATH` | `-w` | Path to pre-parsed workflow YAML |
+| `--inputs PATH` | | YAML file with inputs list (required) |
+| `--output PATH` | `-o` | Output YAML file (required) |
+| `--model TEXT` | `-m` | LiteLLM model identifier |
+
+Input file format (YAML):
+```yaml
+# List of strings
+- "First text to evaluate"
+- "Second text to evaluate"
+
+# Or list of objects
+- text: "First text to evaluate"
+- input: "Second text to evaluate"
+```
+
+Examples:
+```bash
+# Batch evaluate from YAML
+uv run policyflow batch -p policy.md --inputs texts.yaml -o results.yaml
+
+# Use pre-parsed workflow for speed
+uv run policyflow batch -w workflow.yaml --inputs texts.yaml -o results.yaml
+```
+
+##### `normalize` - Normalize policy into structured YAML (Step 1 of two-step parsing)
+
+```bash
+uv run policyflow normalize [OPTIONS]
+```
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--policy PATH` | `-p` | Path to policy markdown file (required) |
+| `--output PATH` | `-o` | Output YAML file path (required) |
+| `--model TEXT` | `-m` | LiteLLM model identifier |
+| `--format TEXT` | | Output format: `pretty` or `yaml` (default: `yaml`) |
+
+Creates a normalized representation of the policy with hierarchical numbering (1, 1.1, 1.1.a style) that can be reviewed before workflow generation.
+
+```bash
+uv run policyflow normalize -p policy.md -o normalized.yaml
+```
+
+##### `generate-workflow` - Generate workflow from normalized policy (Step 2 of two-step parsing)
+
+```bash
+uv run policyflow generate-workflow [OPTIONS]
+```
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--normalized PATH` | `-n` | Path to normalized policy YAML (required) |
+| `--output PATH` | `-o` | Output workflow YAML file (required) |
+| `--model TEXT` | `-m` | LiteLLM model identifier |
+| `--format TEXT` | | Output format: `pretty` or `yaml` (default: `yaml`) |
+
+```bash
+uv run policyflow generate-workflow -n normalized.yaml -o workflow.yaml
+```
+
+##### `parse-two-step` - Complete two-step parsing in one command
+
+```bash
+uv run policyflow parse-two-step [OPTIONS]
+```
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--policy PATH` | `-p` | Path to policy markdown file (required) |
+| `--output-dir PATH` | `-d` | Output directory for artifacts (required) |
+| `--model TEXT` | `-m` | LiteLLM model identifier |
+| `--prefix TEXT` | | Filename prefix for outputs (default: `policy`) |
+
+Creates both `{prefix}_normalized.yaml` and `{prefix}_workflow.yaml` in the output directory.
+
+```bash
+# Creates ./output/policy_normalized.yaml and ./output/policy_workflow.yaml
+uv run policyflow parse-two-step -p policy.md -d ./output
+
+# With custom prefix
+uv run policyflow parse-two-step -p policy.md -d ./output --prefix my_policy
 ```
 
 ### Python API

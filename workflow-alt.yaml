@@ -1,6 +1,201 @@
-description: Determines if a communication qualifies as a personal recommendation
-  based on recipient capacity, investment actions, personalization, and distribution
-  scope
+title: Personal Recommendation Definition Evaluation
+description: Evaluates whether content constitutes a personal recommendation based
+  on regulatory definition
+workflow:
+  nodes:
+  - id: preprocess
+    type: TransformNode
+    params:
+      transforms:
+      - normalize_whitespace
+      - strip_html
+      - truncate:5000
+    routes:
+      default: clause_1_1_a
+  - id: clause_1_1_a
+    type: ClassifierNode
+    params:
+      categories:
+      - matches
+      - not_matches
+      descriptions:
+        matches: Content is directed to someone as an investor or potential investor
+        not_matches: Content is not directed to someone as an investor or potential
+          investor
+    routes:
+      matches: clause_1_2_a
+      not_matches: clause_1_1_b
+  - id: clause_1_1_b
+    type: ClassifierNode
+    params:
+      categories:
+      - matches
+      - not_matches
+      descriptions:
+        matches: Content is directed to someone as an agent for an investor or potential
+          investor
+        not_matches: Content is not directed to someone as an agent for an investor
+          or potential investor
+    routes:
+      matches: clause_1_2_a
+      not_matches: requirement_failed
+  - id: clause_1_2_a
+    type: ClassifierNode
+    params:
+      categories:
+      - matches
+      - not_matches
+      descriptions:
+        matches: Content recommends investment activities like buying, selling, subscribing,
+          exchanging, redeeming, holding or underwriting securities, structured deposits
+          or relevant investments
+        not_matches: Content does not recommend investment activities like buying,
+          selling, subscribing, exchanging, redeeming, holding or underwriting securities,
+          structured deposits or relevant investments
+    routes:
+      matches: clause_1_3_a
+      not_matches: clause_1_2_b
+  - id: clause_1_2_b
+    type: ClassifierNode
+    params:
+      categories:
+      - matches
+      - not_matches
+      descriptions:
+        matches: Content recommends exercising or not exercising rights to buy, sell,
+          subscribe, exchange or redeem investments
+        not_matches: Content does not recommend exercising or not exercising rights
+          to buy, sell, subscribe, exchange or redeem investments
+    routes:
+      matches: clause_1_3_a
+      not_matches: requirement_failed
+  - id: clause_1_3_a
+    type: ClassifierNode
+    params:
+      categories:
+      - matches
+      - not_matches
+      descriptions:
+        matches: Content is presented as suitable for the specific person receiving
+          it
+        not_matches: Content is not presented as suitable for the specific person
+          receiving it
+    routes:
+      matches: clause_1_4
+      not_matches: clause_1_3_b
+  - id: clause_1_3_b
+    type: ClassifierNode
+    params:
+      categories:
+      - matches
+      - not_matches
+      descriptions:
+        matches: Content is based on consideration of the recipient's personal circumstances
+        not_matches: Content is not based on consideration of the recipient's personal
+          circumstances
+    routes:
+      matches: clause_1_4
+      not_matches: requirement_failed
+  - id: clause_1_4
+    type: ClassifierNode
+    params:
+      categories:
+      - matches
+      - not_matches
+      descriptions:
+        matches: Content is not issued exclusively to the public (i.e., it's targeted/personalized)
+        not_matches: Content is issued exclusively to the public (i.e., it's generic/mass
+          distribution)
+    routes:
+      matches: personal_recommendation_confirmed
+      not_matches: requirement_failed
+  - id: personal_recommendation_confirmed
+    type: DataExtractorNode
+    params:
+      schema:
+        facts:
+        - Content qualifies as a PERSONAL RECOMMENDATION under regulatory definition
+        - 'All four requirements satisfied: recipient capacity, investment action,
+          suitability basis, and non-public distribution'
+    routes: {}
+  - id: requirement_failed
+    type: DataExtractorNode
+    params:
+      schema:
+        facts:
+        - Content does NOT qualify as a personal recommendation
+        - One or more regulatory requirements not satisfied
+    routes: {}
+  start_node: preprocess
+  hierarchy:
+  - clause_number: '1.1'
+    clause_text: 'is made to a person in their capacity as:'
+    nodes:
+    - clause_1_1_a
+    - clause_1_1_b
+    sub_groups:
+    - clause_number: 1.1.a
+      clause_text: an investor or potential investor
+      nodes:
+      - clause_1_1_a
+      sub_groups: []
+      logic: null
+    - clause_number: 1.1.b
+      clause_text: agent for an investor or a potential investor
+      nodes:
+      - clause_1_1_b
+      sub_groups: []
+      logic: null
+    logic: any
+  - clause_number: '1.2'
+    clause_text: 'is for the person in (1) to do any of the following (whether as
+      principal or agent):'
+    nodes:
+    - clause_1_2_a
+    - clause_1_2_b
+    sub_groups:
+    - clause_number: 1.2.a
+      clause_text: buy, sell, subscribe for, exchange, redeem, hold or underwrite
+        a particular investment which is a security, a structured deposit or a relevant
+        investment
+      nodes:
+      - clause_1_2_a
+      sub_groups: []
+      logic: null
+    - clause_number: 1.2.b
+      clause_text: exercise or not exercise any right conferred by such an investment
+        to buy, sell, subscribe for, exchange or redeem such an investment
+      nodes:
+      - clause_1_2_b
+      sub_groups: []
+      logic: null
+    logic: any
+  - clause_number: '1.3'
+    clause_text: 'is:'
+    nodes:
+    - clause_1_3_a
+    - clause_1_3_b
+    sub_groups:
+    - clause_number: 1.3.a
+      clause_text: presented as suitable for the person to whom it is made
+      nodes:
+      - clause_1_3_a
+      sub_groups: []
+      logic: null
+    - clause_number: 1.3.b
+      clause_text: based on a consideration of the circumstances of that person
+      nodes:
+      - clause_1_3_b
+      sub_groups: []
+      logic: null
+    logic: any
+  - clause_number: '1.4'
+    clause_text: is not issued exclusively to the public
+    nodes:
+    - clause_1_4
+    sub_groups: []
+    logic: null
+normalized_policy_ref: normalized.yaml
 raw_text: 'A personal recommendation means a recommendation that:
 
 
@@ -26,136 +221,3 @@ raw_text: 'A personal recommendation means a recommendation that:
   (b) based on a consideration of the circumstances of that person; and
 
   (4) is not issued exclusively to the public.'
-title: Personal Recommendation Classification Policy
-workflow:
-  nodes:
-  - id: preprocess_input
-    params:
-      transforms:
-      - normalize_whitespace
-      - strip_html
-      - truncate:10000
-    routes:
-      default: extract_key_info
-    type: TransformNode
-  - id: extract_key_info
-    params:
-      schema:
-        entities:
-          actions: list of investment actions mentioned (buy, sell, hold, etc.)
-          investments: list of specific investments or securities mentioned
-          recipients: list of who the communication is addressed to
-        facts:
-        - is this addressed to investors or potential investors
-        - does it recommend specific investment actions
-        - is it presented as suitable for specific recipients
-        - is it based on individual circumstances
-        - is it publicly distributed
-        values:
-          distribution_scope: how widely is this distributed
-          personalization_level: how personalized is the content
-    routes:
-      default: check_recipient_capacity
-    type: DataExtractorNode
-  - id: check_recipient_capacity
-    params:
-      categories:
-      - investor_capacity
-      - agent_capacity
-      - other_capacity
-      descriptions:
-        agent_capacity: Communication is made to someone acting as an agent for an
-          investor or potential investor
-        investor_capacity: Communication is made to someone in their capacity as an
-          investor or potential investor
-        other_capacity: Communication is made to someone in a different capacity (employee,
-          general public, etc.)
-    routes:
-      agent_capacity: check_investment_actions
-      investor_capacity: check_investment_actions
-      other_capacity: not_personal_recommendation
-    type: ClassifierNode
-  - id: check_investment_actions
-    params:
-      mode: any
-      patterns:
-      - \b(buy|sell|subscribe|exchange|redeem|hold|underwrite)\b
-      - \b(exercise|not exercise)\b.*\b(right|option)\b
-      - \b(purchase|acquire|dispose|invest)\b
-    routes:
-      matched: check_personalization
-      not_matched: not_personal_recommendation
-    type: PatternMatchNode
-  - id: check_personalization
-    params:
-      aggregation: majority
-      inner_prompt: 'Analyze if this communication is personalized by checking if
-        it is either:
-
-        1. Presented as suitable for the specific person/recipient, OR
-
-        2. Based on consideration of that person''s individual circumstances
-
-
-        Look for indicators like:
-
-        - Direct addressing ("for you", "suitable for your situation")
-
-        - References to personal circumstances, risk profile, or needs
-
-        - Customized recommendations based on individual factors
-
-        - Tailored advice rather than general information
-
-
-        Answer with result: true if personalized, false if generic/general
-
-        '
-      n_samples: 3
-    routes:
-      consensus: check_distribution_scope
-      majority: check_distribution_scope
-      split: needs_human_review
-    type: SamplerNode
-  - id: check_distribution_scope
-    params:
-      categories:
-      - public_distribution
-      - private_distribution
-      - unclear_distribution
-      descriptions:
-        private_distribution: Communication is sent to specific individuals or limited
-          groups
-        public_distribution: Communication is issued exclusively to the general public
-          (websites, public advertisements, mass media)
-        unclear_distribution: Distribution scope is ambiguous or cannot be determined
-    routes:
-      private_distribution: is_personal_recommendation
-      public_distribution: not_personal_recommendation
-      unclear_distribution: needs_human_review
-    type: ClassifierNode
-  - id: is_personal_recommendation
-    params:
-      schema:
-        facts:
-        - classification result: personal recommendation
-        - reason: meets all four criteria of the policy
-    routes: {}
-    type: DataExtractorNode
-  - id: not_personal_recommendation
-    params:
-      schema:
-        facts:
-        - classification result: not a personal recommendation
-        - reason: fails to meet one or more policy criteria
-    routes: {}
-    type: DataExtractorNode
-  - id: needs_human_review
-    params:
-      schema:
-        facts:
-        - classification result: requires human review
-        - reason: ambiguous content that cannot be automatically classified
-    routes: {}
-    type: DataExtractorNode
-  start_node: preprocess_input
