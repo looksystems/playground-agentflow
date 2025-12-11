@@ -8,6 +8,7 @@ A generic policy evaluation tool that uses LLM-powered workflows to check if tex
 - [Quick Start](#quick-start)
 - [Writing Policies](#writing-policies)
 - [CLI Reference](#cli-reference)
+- [Two-Step Parser](#two-step-parser)
 - [Python API](#python-api)
 - [Configuration](#configuration)
 - [Workflow Caching](#workflow-caching)
@@ -203,6 +204,207 @@ policy-eval batch [OPTIONS]
 **Example:**
 ```bash
 policy-eval batch -w workflow.yaml --inputs texts.yaml -o results.yaml
+```
+
+### normalize - Normalize policy document (Step 1)
+
+```bash
+policy-eval normalize [OPTIONS]
+```
+
+**Options:**
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--policy` | `-p` | Path to policy markdown file (required) |
+| `--output` | `-o` | Output YAML file path (required) |
+| `--model` | `-m` | LiteLLM model identifier |
+| `--format` | | Output format: `pretty` or `yaml` |
+
+**Example:**
+```bash
+# Normalize a policy into structured format
+policy-eval normalize -p policy.md -o normalized.yaml
+```
+
+### generate-workflow - Generate workflow from normalized policy (Step 2)
+
+```bash
+policy-eval generate-workflow [OPTIONS]
+```
+
+**Options:**
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--normalized` | `-n` | Path to normalized policy YAML (required) |
+| `--output` | `-o` | Output workflow YAML file (required) |
+| `--model` | `-m` | LiteLLM model identifier |
+| `--format` | | Output format: `pretty` or `yaml` |
+
+**Example:**
+```bash
+# Generate workflow from normalized policy
+policy-eval generate-workflow -n normalized.yaml -o workflow.yaml
+```
+
+### parse-two-step - Complete two-step parsing
+
+```bash
+policy-eval parse-two-step [OPTIONS]
+```
+
+**Options:**
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--policy` | `-p` | Path to policy markdown file (required) |
+| `--output-dir` | `-d` | Output directory for artifacts (required) |
+| `--model` | `-m` | LiteLLM model identifier |
+| `--prefix` | | Filename prefix for outputs (default: `policy`) |
+
+**Example:**
+```bash
+# Parse policy in two steps, saving both artifacts
+policy-eval parse-two-step -p policy.md -d ./output/
+# Creates: ./output/policy_normalized.yaml and ./output/policy_workflow.yaml
+```
+
+## Two-Step Parser
+
+The two-step parser provides enhanced control, auditability, and explainability for policy parsing.
+
+### Overview
+
+```
+Raw Policy Markdown
+        ↓ (Step 1: Normalize)
+NormalizedPolicy (YAML)  ← Review/edit before workflow generation
+        ↓ (Step 2: Generate Workflow)
+ParsedWorkflowPolicyV2 (YAML)  ← Node IDs match clause numbers
+```
+
+### Why Two Steps?
+
+1. **Auditability**: Review the normalized policy before workflow generation
+2. **Explainability**: Node IDs match clause numbers (e.g., `clause_1_1_a`)
+3. **Editability**: Manually adjust the normalized policy if needed
+4. **Traceability**: Map evaluation results back to specific clauses
+
+### Numbering Convention
+
+The normalizer uses hierarchical numbering:
+- Sections: `1`, `2`, `3`
+- Clauses: `1.1`, `1.2`, `2.1`
+- Sub-clauses: `1.1.1`, `1.1.2`
+- Deep sub-clauses: `1.1.1.a`, `1.1.1.b` (letters at depth 3+)
+
+### Normalized Policy Structure
+
+```yaml
+title: Personal Recommendation Definition
+version: "1.0"
+description: Defines what constitutes a personal recommendation
+sections:
+  - number: "1"
+    title: Definition Requirements
+    logic: all
+    clauses:
+      - number: "1.1"
+        title: Recipient Capacity
+        text: "is made to a person in their capacity as:"
+        clause_type: requirement
+        logic: any
+        sub_clauses:
+          - number: "1.1.a"
+            title: Investor Status
+            text: "an investor or potential investor"
+            clause_type: requirement
+          - number: "1.1.b"
+            title: Agent Status
+            text: "agent for an investor"
+            clause_type: requirement
+```
+
+### Clause Types
+
+| Type | Description | Typical Node |
+|------|-------------|--------------|
+| `requirement` | Must be evaluated/checked | PatternMatchNode, ClassifierNode |
+| `definition` | Defines terms | Context only |
+| `condition` | If/then logic | ClassifierNode with routing |
+| `exception` | Exceptions to rules | Short-circuit nodes |
+| `reference` | External references | Context only |
+
+### Workflow with Hierarchy
+
+The generated workflow includes a `hierarchy` field mapping nodes to clauses:
+
+```yaml
+workflow:
+  nodes:
+    - id: clause_1_1_a      # Matches clause 1.1.a
+      type: ClassifierNode
+      # ...
+  hierarchy:
+    - clause_number: "1.1"
+      clause_text: "is made to a person..."
+      nodes: ["clause_1_1_a", "clause_1_1_b"]
+      logic: any
+      sub_groups:
+        - clause_number: "1.1.a"
+          nodes: ["clause_1_1_a"]
+```
+
+### Python API for Two-Step Parsing
+
+```python
+from policy_evaluator.parser import (
+    normalize_policy,
+    generate_workflow_from_normalized,
+    parse_policy_two_step,
+)
+from policy_evaluator.models import NormalizedPolicy
+
+# Step 1: Normalize
+with open("policy.md") as f:
+    normalized = normalize_policy(f.read())
+normalized.save_yaml("normalized.yaml")
+
+# Review/edit normalized.yaml if needed...
+
+# Step 2: Generate workflow
+normalized = NormalizedPolicy.load_yaml("normalized.yaml")
+workflow = generate_workflow_from_normalized(normalized)
+workflow.save_yaml("workflow.yaml")
+
+# Or do both steps at once
+workflow = parse_policy_two_step(
+    policy_markdown,
+    save_normalized="normalized.yaml"
+)
+```
+
+### Result Traceability
+
+Map evaluation results back to clause numbers:
+
+```python
+from policy_evaluator.clause_mapping import (
+    extract_clause_results,
+    format_clause_results_report,
+    summarize_results,
+)
+
+# After workflow execution
+results = extract_clause_results(shared_store, normalized_policy)
+report = format_clause_results_report(results)
+print(report)
+# [+] Clause 1.1: PASS (92% confidence)
+#     Reasoning: Content addresses investor directly
+#   [+] Clause 1.1.a: PASS (95% confidence)
+#   [-] Clause 1.1.b: FAIL (88% confidence)
+
+summary = summarize_results(results)
+print(f"Pass rate: {summary['pass_rate']:.0%}")
+print(f"Failed clauses: {summary['failed_clauses']}")
 ```
 
 ## Python API

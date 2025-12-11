@@ -180,3 +180,68 @@ all_nodes = get_all_nodes()
 # Get schemas for parser-exposed nodes
 schemas = get_parser_schemas()
 ```
+
+## Clause-Numbered Nodes (Two-Step Parser)
+
+When using the two-step parser, node IDs follow clause numbering:
+
+### Naming Convention
+
+| Clause Number | Node ID |
+|---------------|---------|
+| `1.1` | `clause_1_1` |
+| `1.1.a` | `clause_1_1_a` |
+| `2.1.1.b` | `clause_2_1_1_b` |
+
+### Numbering Utilities
+
+```python
+from policy_evaluator.numbering import (
+    clause_number_to_node_id,    # "1.1.a" -> "clause_1_1_a"
+    node_id_to_clause_number,    # "clause_1_1_a" -> "1.1.a"
+    generate_clause_number,      # Generate next in sequence
+    parse_clause_depth,          # "1.1.a" -> 2
+    get_parent_clause_number,    # "1.1.a" -> "1.1"
+    clause_sort_key,             # For sorting
+    is_ancestor_of,              # Check hierarchy
+)
+```
+
+### Workflow Hierarchy
+
+The two-step parser generates workflows with a `hierarchy` field:
+
+```yaml
+workflow:
+  nodes:
+    - id: clause_1_1_a
+      type: ClassifierNode
+      # ...
+  start_node: preprocess
+  hierarchy:
+    - clause_number: "1.1"
+      clause_text: "Original clause text"
+      nodes: ["clause_1_1_a", "clause_1_1_b"]
+      logic: any
+      sub_groups:
+        - clause_number: "1.1.a"
+          nodes: ["clause_1_1_a"]
+```
+
+### Result Traceability
+
+```python
+from policy_evaluator.clause_mapping import (
+    ClauseResult,
+    extract_clause_results,
+    format_clause_results_report,
+    summarize_results,
+)
+
+# After workflow execution
+results = extract_clause_results(shared, normalized_policy)
+print(format_clause_results_report(results))
+# [+] Clause 1.1: PASS (92%)
+#   [+] Clause 1.1.a: PASS (95%)
+#   [-] Clause 1.1.b: FAIL (88%)
+```
