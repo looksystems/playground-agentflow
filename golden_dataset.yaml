@@ -1,0 +1,1119 @@
+# Golden Dataset for Personal Recommendation Policy Evaluation
+# Policy: policy.md - Definition of a "personal recommendation"
+#
+# Policy Structure (ALL criteria must be met):
+#   Criterion 1 - Recipient Capacity (ANY): investor/potential investor OR their agent
+#   Criterion 2 - Investment Action (ANY): buy/sell/hold/etc. OR exercise/not exercise rights
+#   Criterion 3 - Recommendation Type (ANY): presented as suitable OR based on circumstances
+#   Criterion 4 - Distribution Scope: NOT issued exclusively to the public
+
+policy_file: policy.md
+description: >
+  Test cases for evaluating the Personal Recommendation definition.
+  A personal recommendation requires ALL four criteria to be met.
+
+test_cases:
+  # ===========================================================================
+  # CATEGORY 1: CLEAR PASS (6 cases)
+  # Cases that clearly satisfy all criteria
+  # ===========================================================================
+
+  - id: test_001
+    name: "Classic personalized stock recommendation"
+    input_text: >
+      Dear Mr. Johnson, based on your current portfolio allocation and your
+      stated goal of retirement in 10 years, I recommend you purchase 500
+      shares of Vanguard Total Stock Market ETF (VTI). This aligns well with
+      your moderate risk tolerance.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }   # Addressed to investor
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Recommendation to buy
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }   # Presented as suitable
+            criterion_3b: { met: true }   # Based on circumstances
+        criterion_4:
+          met: true                       # Private communication
+    category: clear_pass
+    notes: "Classic case - personalized advice to identified investor"
+
+  - id: test_002
+    name: "Advice through financial agent"
+    input_text: >
+      To: Sarah Williams, Financial Advisor at ABC Wealth Management
+      Re: Your client Mr. Thompson
+
+      Given Mr. Thompson's circumstances as you described - approaching
+      retirement with a conservative profile - I suggest he sell his current
+      high-yield bond holdings and move into Treasury securities. This would
+      be more suitable for his situation.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: false }
+            criterion_1b: { met: true }   # Through agent
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Sell recommendation
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }   # "Suitable for his situation"
+            criterion_3b: { met: true }   # Based on circumstances
+        criterion_4:
+          met: true
+    category: clear_pass
+    notes: "Advice delivered through an agent acting for investor"
+
+  - id: test_003
+    name: "Hold recommendation based on circumstances"
+    input_text: >
+      Hi David, after reviewing your tax situation and the fact that you're
+      in a high income bracket this year, my recommendation is to hold onto
+      your Microsoft shares rather than selling. The capital gains hit wouldn't
+      be worth it given your current circumstances.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Hold recommendation
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: true }   # Based on tax circumstances
+        criterion_4:
+          met: true
+    category: clear_pass
+    notes: "Hold recommendation based on personal tax circumstances"
+
+  - id: test_004
+    name: "Options exercise recommendation"
+    input_text: >
+      Mrs. Chen, regarding your employee stock options at TechCorp that vest
+      next month: given the current stock price of $150 (well above your $80
+      strike price) and your goal to diversify, I recommend you exercise these
+      options and sell the shares. This would be appropriate for your situation.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Sell shares
+            criterion_2b: { met: true }   # Exercise options
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }   # "Appropriate for your situation"
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: clear_pass
+    notes: "Exercise rights recommendation - satisfies criterion 2b"
+
+  - id: test_005
+    name: "Bond subscription recommendation"
+    input_text: >
+      Dear Client, based on your income needs and conservative investment
+      profile, I recommend you subscribe to the upcoming AAA-rated municipal
+      bond offering from the State of California. The tax-exempt income would
+      be particularly suitable given your tax bracket.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Subscribe
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }   # "Suitable given your tax bracket"
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: clear_pass
+    notes: "Subscription recommendation for bond offering"
+
+  - id: test_006
+    name: "Structured deposit recommendation"
+    input_text: >
+      Mr. Patel, considering your desire for principal protection while still
+      participating in market upside, I recommend the Capital Protected Note
+      linked to the S&P 500 that we discussed. Given your 5-year investment
+      horizon, this structured deposit would be suitable for your needs.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Structured deposit
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }   # "Suitable for your needs"
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: clear_pass
+    notes: "Structured deposit recommendation"
+
+  # ===========================================================================
+  # CATEGORY 2: CLEAR FAIL (6 cases)
+  # Cases that clearly violate one or more criteria
+  # ===========================================================================
+
+  - id: test_007
+    name: "Public market commentary"
+    input_text: >
+      CNBC Market Update: Tech stocks rallied today with the NASDAQ up 2%.
+      Analysts suggest investors consider adding technology exposure to
+      portfolios. Apple and Microsoft led gains.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: false
+          sub_results:
+            criterion_1a: { met: false }  # Not to specific investor
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Suggests buying
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }  # Not based on anyone's circumstances
+        criterion_4:
+          met: false                      # Public broadcast
+    category: clear_fail
+    notes: "Public market commentary - fails criteria 1, 3, and 4"
+
+  - id: test_008
+    name: "General educational content"
+    input_text: >
+      Understanding ETFs: Exchange-traded funds are investment vehicles that
+      track an index, sector, or asset class. They trade like stocks and offer
+      diversification benefits. Common examples include SPY (S&P 500) and
+      QQQ (NASDAQ 100).
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: false
+          sub_results:
+            criterion_1a: { met: false }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: false                      # No recommendation to act
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }
+        criterion_4:
+          met: false                      # Educational content for public
+    category: clear_fail
+    notes: "Educational material - not a recommendation at all"
+
+  - id: test_009
+    name: "News article about stocks"
+    input_text: >
+      Reuters: Amazon.com Inc reported quarterly earnings that beat analyst
+      expectations. The company's cloud computing division AWS grew 30%
+      year-over-year. Shares rose 5% in after-hours trading.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: false
+          sub_results:
+            criterion_1a: { met: false }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: false                      # No recommendation
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }
+        criterion_4:
+          met: false
+    category: clear_fail
+    notes: "News article - factual reporting, not a recommendation"
+
+  - id: test_010
+    name: "Generic mass newsletter"
+    input_text: >
+      Monthly Investment Newsletter - December 2024
+      To all subscribers: Stocks look attractive heading into the new year.
+      Consider buying growth stocks as interest rates stabilize. Our top
+      picks include NVDA, GOOGL, and META.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: false
+          sub_results:
+            criterion_1a: { met: false }  # "All subscribers" - not specific
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Recommendation to buy
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }  # Not based on individual circumstances
+        criterion_4:
+          met: false                      # Mass distribution to subscribers
+    category: clear_fail
+    notes: "Generic newsletter - fails criteria 1, 3, and 4"
+
+  - id: test_011
+    name: "Non-investment product recommendation"
+    input_text: >
+      Hi John, based on your recent home purchase and family situation, I
+      strongly recommend you get a term life insurance policy. A 20-year
+      term with $500,000 coverage would be suitable for your needs.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }   # Could be an investor
+            criterion_1b: { met: false }
+        criterion_2:
+          met: false                      # Insurance is not a security
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }   # "Suitable for your needs"
+            criterion_3b: { met: true }   # Based on circumstances
+        criterion_4:
+          met: true
+    category: clear_fail
+    notes: "Insurance recommendation - fails criterion 2 (not a security)"
+
+  - id: test_012
+    name: "Advice to non-investor"
+    input_text: >
+      Hey Mom, you should really think about getting a savings account with
+      better interest rates. The online banks are offering 5% APY now. It
+      would be good for your emergency fund.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: false
+          sub_results:
+            criterion_1a: { met: false }  # Not in capacity as investor
+            criterion_1b: { met: false }
+        criterion_2:
+          met: false                      # Savings account not a security
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: clear_fail
+    notes: "Advice to family member not in investor capacity"
+
+  # ===========================================================================
+  # CATEGORY 3: EDGE CASES - CRITERION 1 (Recipient Capacity) (4 cases)
+  # ===========================================================================
+
+  - id: test_013
+    name: "Potential investor - considering first investment"
+    input_text: >
+      Hi Alex, I know you mentioned you're thinking about starting to invest
+      some of your savings. Given that you're young and have a stable income,
+      I'd suggest opening a brokerage account and buying a broad market index
+      fund like VTI. It would be suitable for a first-time investor like you.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }   # "Potential investor"
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_1
+    notes: "Potential investor qualifies under criterion 1a"
+
+  - id: test_014
+    name: "Financial advisor acting as agent"
+    input_text: >
+      Dear James (Senior Portfolio Manager),
+      For your client accounts in the moderate growth category, I recommend
+      reallocating 10% from bonds to international equities. This would be
+      suitable given the current yield environment and their stated objectives.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: false }
+            criterion_1b: { met: true }   # Advisor is agent for clients
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_1
+    notes: "Portfolio manager as agent for investor clients"
+
+  - id: test_015
+    name: "Passive investor with old holdings"
+    input_text: >
+      Uncle Robert, I noticed you still hold those IBM shares from 20 years
+      ago. Given how much they've appreciated and your retirement plans,
+      you might want to consider selling some to diversify. This would be
+      more appropriate for your current stage of life.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }   # Holds investments = investor
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Sell recommendation
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_1
+    notes: "Person who holds investments is still an investor"
+
+  - id: test_016
+    name: "Ambiguous recipient - business context"
+    input_text: >
+      In our meeting, I suggested the company treasury should invest excess
+      cash in short-term Treasury bills. This would be suitable given the
+      company's liquidity needs.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }   # Company as institutional investor
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_1
+    notes: "Corporate treasury can be an investor"
+
+  # ===========================================================================
+  # CATEGORY 4: EDGE CASES - CRITERION 2 (Investment Action) (4 cases)
+  # ===========================================================================
+
+  - id: test_017
+    name: "Recommendation NOT to exercise rights"
+    input_text: >
+      Mr. Wong, regarding the rights issue from your bank shares: given the
+      current discount is minimal and your portfolio is already overweight
+      in financials, I recommend you do NOT exercise these rights. Let them
+      lapse - this would be more suitable for your situation.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: true }   # "Not exercise" is covered
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_2
+    notes: "Recommendation to NOT exercise qualifies under 2b"
+
+  - id: test_018
+    name: "Redemption recommendation"
+    input_text: >
+      Dear Mrs. Garcia, your money market fund has served you well, but with
+      rates declining, I recommend you redeem your shares and move into a
+      bond fund. Given your income needs, this would be more appropriate.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Redeem
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_2
+    notes: "Redemption is explicitly covered in criterion 2a"
+
+  - id: test_019
+    name: "Underwriting recommendation"
+    input_text: >
+      To the Investment Committee: Based on our analysis and the institution's
+      risk appetite, I recommend we participate in underwriting the upcoming
+      TechStart IPO. The risk/reward profile would be suitable for our mandate.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }   # Institutional investor
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Underwrite
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_2
+    notes: "Underwriting recommendation - covered in criterion 2a"
+
+  - id: test_020
+    name: "Cryptocurrency recommendation (edge case)"
+    input_text: >
+      Based on your high risk tolerance and interest in alternative assets,
+      I suggest you allocate 5% of your portfolio to Bitcoin through the
+      new spot Bitcoin ETF. This would be suitable for your profile.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # ETF is a security
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_2
+    notes: "Bitcoin ETF is a security even though Bitcoin itself isn't"
+
+  # ===========================================================================
+  # CATEGORY 5: EDGE CASES - CRITERION 3 (Recommendation Type) (4 cases)
+  # ===========================================================================
+
+  - id: test_021
+    name: "Age-based recommendation only"
+    input_text: >
+      Since you're 25 years old, you should invest in growth stocks.
+      At your age, you can handle more volatility. I recommend buying QQQ.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: true }   # Age is a personal circumstance
+        criterion_4:
+          met: true
+    category: edge_case_criterion_3
+    notes: "Age alone counts as consideration of circumstances"
+
+  - id: test_022
+    name: "Slight personalization in generic advice"
+    input_text: >
+      Hi valued customer, like many of our clients approaching retirement,
+      you might want to consider shifting to more conservative investments.
+      Bond funds could be a good option.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }  # "Like many clients" = generic
+        criterion_4:
+          met: true
+    category: edge_case_criterion_3
+    notes: "Generic advice with demographic targeting - not truly personalized"
+
+  - id: test_023
+    name: "Explicit suitability statement"
+    input_text: >
+      I recommend you buy shares in Acme Corp. In my professional opinion,
+      this investment is suitable for you.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }   # "Suitable for you"
+            criterion_3b: { met: false }
+        criterion_4:
+          met: true
+    category: edge_case_criterion_3
+    notes: "Explicit 'suitable for you' statement satisfies 3a"
+
+  - id: test_024
+    name: "Implicit consideration of circumstances"
+    input_text: >
+      Given everything we discussed about your situation, your goals, and
+      where you are in life, I think investing in this balanced fund would
+      make sense for you.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: true }   # Implicit but clear reference
+        criterion_4:
+          met: true
+    category: edge_case_criterion_3
+    notes: "Implicit reference to circumstances is sufficient"
+
+  # ===========================================================================
+  # CATEGORY 6: EDGE CASES - CRITERION 4 (Distribution Scope) (4 cases)
+  # ===========================================================================
+
+  - id: test_025
+    name: "Blog post with personalized sign-off"
+    input_text: >
+      My Investment Blog - December Update
+      The market looks bullish heading into year end. I recommend buying
+      tech stocks for 2025. This is my personal view and not financial advice.
+
+      Best regards to all my readers!
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: false
+          sub_results:
+            criterion_1a: { met: false }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }
+        criterion_4:
+          met: false                      # Public blog
+    category: edge_case_criterion_4
+    notes: "Public blog post - fails criterion 4"
+
+  - id: test_026
+    name: "Email to specific client list"
+    input_text: >
+      To: Premium Advisory Clients
+
+      Based on our analysis of your collective portfolio profiles, we
+      recommend increasing allocation to emerging markets. This is
+      communicated exclusively to our managed account clients.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }  # "Collective" not individual
+        criterion_4:
+          met: true                       # Not public
+    category: edge_case_criterion_4
+    notes: "Client list email - not public but also not personalized"
+
+  - id: test_027
+    name: "Social media direct message"
+    input_text: >
+      @JohnInvestor - Hey! Saw your question about tech stocks. Based on
+      what you've shared about your portfolio being heavy in value stocks,
+      I'd suggest adding some AAPL for balance. Would be suitable given
+      what you've told me.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true                       # Direct message, not public
+    category: edge_case_criterion_4
+    notes: "DM is private communication, not public"
+
+  - id: test_028
+    name: "Webinar Q&A response"
+    input_text: >
+      Question from the audience: "Should I buy Tesla stock?"
+      Response: "Without knowing your specific situation, I can't give
+      personalized advice. Generally speaking, any single stock carries
+      concentration risk."
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: false
+          sub_results:
+            criterion_1a: { met: false }  # Anonymous questioner
+            criterion_1b: { met: false }
+        criterion_2:
+          met: false                      # No specific recommendation
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }
+        criterion_4:
+          met: false                      # Public webinar
+    category: edge_case_criterion_4
+    notes: "Public Q&A with generic response - not a personal recommendation"
+
+  # ===========================================================================
+  # CATEGORY 7: PARTIAL MATCHES (4 cases)
+  # Cases where only some criteria are met
+  # ===========================================================================
+
+  - id: test_029
+    name: "Personalized but non-investment"
+    input_text: >
+      Based on your current cash flow and the fact that you're self-employed,
+      I recommend setting up a SEP-IRA for tax advantages. This would be
+      very suitable for your situation.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }   # Potential investor
+            criterion_1b: { met: false }
+        criterion_2:
+          met: false                      # Account setup, not security transaction
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: partial_match
+    notes: "Advice to set up account type, not buy/sell securities"
+
+  - id: test_030
+    name: "Investment advice to the public"
+    input_text: >
+      PUBLIC SERVICE ANNOUNCEMENT
+
+      In these volatile times, we recommend all citizens consider investing
+      in government bonds for safety. I-Bonds currently offer attractive
+      yields suitable for most savers.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: false
+          sub_results:
+            criterion_1a: { met: false }  # "All citizens"
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }
+        criterion_4:
+          met: false                      # Public announcement
+    category: partial_match
+    notes: "Investment recommendation but public and generic"
+
+  - id: test_031
+    name: "To investor but entirely generic"
+    input_text: >
+      Dear Investor,
+      As a general principle, diversification is important. Consider
+      spreading your investments across different asset classes.
+
+      Regards,
+      Your Investment Advisor
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: false                      # No specific recommendation
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }
+        criterion_4:
+          met: true
+    category: partial_match
+    notes: "To investor but generic principle, not specific recommendation"
+
+  - id: test_032
+    name: "Securities mentioned but no recommendation"
+    input_text: >
+      Hi Mark, I saw you asked about Apple stock. AAPL is currently trading
+      at $175, up 20% year to date. The company recently announced a new
+      product line. Let me know if you want to discuss further.
+    expected:
+      policy_satisfied: false
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: false                      # Information, not recommendation
+          sub_results:
+            criterion_2a: { met: false }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: false
+          sub_results:
+            criterion_3a: { met: false }
+            criterion_3b: { met: false }
+        criterion_4:
+          met: true
+    category: partial_match
+    notes: "Information about securities but no recommendation to act"
+
+  # ===========================================================================
+  # CATEGORY 8: ADDITIONAL EDGE CASES (4 cases)
+  # ===========================================================================
+
+  - id: test_033
+    name: "Recommendation with disclaimer"
+    input_text: >
+      Mr. Lee, based on your investment objectives, I recommend purchasing
+      shares in XYZ Growth Fund. This would be suitable for your profile.
+      Note: This is a personal recommendation and you should consider your
+      own circumstances.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: additional_edge_case
+    notes: "Disclaimer doesn't negate the personal recommendation"
+
+  - id: test_034
+    name: "Negative recommendation (don't buy)"
+    input_text: >
+      Sarah, given your conservative profile and the high volatility of
+      meme stocks, I recommend you do NOT buy GameStop shares. This
+      investment would not be suitable for your situation.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # "Do not buy" still relates to buying
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }   # "Not suitable" still assesses suitability
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: additional_edge_case
+    notes: "Negative recommendation (don't buy) is still a recommendation"
+
+  - id: test_035
+    name: "Exchange recommendation"
+    input_text: >
+      Dr. Patel, I recommend exchanging your current bond ETF for a
+      shorter-duration option given the interest rate environment and
+      your timeline. This switch would be more suitable for your needs.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }   # Exchange
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: additional_edge_case
+    notes: "Exchange is explicitly covered in criterion 2a"
+
+  - id: test_036
+    name: "Conditional recommendation"
+    input_text: >
+      Tom, IF you decide to increase your equity exposure (which would
+      be suitable given your long horizon), I would recommend buying an
+      S&P 500 index fund. But this is only if you're comfortable with
+      the additional risk.
+    expected:
+      policy_satisfied: true
+      criterion_results:
+        criterion_1:
+          met: true
+          sub_results:
+            criterion_1a: { met: true }
+            criterion_1b: { met: false }
+        criterion_2:
+          met: true
+          sub_results:
+            criterion_2a: { met: true }
+            criterion_2b: { met: false }
+        criterion_3:
+          met: true
+          sub_results:
+            criterion_3a: { met: true }
+            criterion_3b: { met: true }
+        criterion_4:
+          met: true
+    category: additional_edge_case
+    notes: "Conditional recommendation is still a recommendation"
