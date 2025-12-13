@@ -427,6 +427,9 @@ uv run policyflow hypothesize --analysis analysis.yaml --workflow workflow.yaml 
 
 # Or run the full improvement loop at once
 uv run policyflow improve --workflow workflow.yaml --dataset golden_dataset.yaml
+
+# Quick test with limited data (1 test case, 1 iteration)
+uv run policyflow improve --workflow workflow.yaml --dataset golden_dataset.yaml --limit 1 --max-iterations 1
 ```
 
 ### Automated Optimization
@@ -435,8 +438,12 @@ uv run policyflow improve --workflow workflow.yaml --dataset golden_dataset.yaml
 # Run optimization with budget constraints
 uv run policyflow optimize --workflow workflow.yaml --dataset golden_dataset.yaml \
     --max-iterations 10 \
-    --target-accuracy 0.95 \
+    --target 0.95 \
     --output optimized_workflow.yaml
+
+# Quick test with subset of test cases
+uv run policyflow optimize --workflow workflow.yaml --dataset golden_dataset.yaml \
+    --limit 5 --max-iterations 1
 ```
 
 ### Python API

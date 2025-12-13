@@ -87,6 +87,7 @@ policyflow generate-dataset --policy n.yaml -o d.yaml --include-edge-cases --mod
 policyflow benchmark -w workflow.yaml -d dataset.yaml
 policyflow benchmark -w workflow.yaml -d dataset.yaml -o report.yaml
 policyflow benchmark -w workflow.yaml -d dataset.yaml --category compliance
+policyflow benchmark -w workflow.yaml -d dataset.yaml --limit 5  # Quick test
 ```
 
 | Option | Short | Description |
@@ -96,6 +97,7 @@ policyflow benchmark -w workflow.yaml -d dataset.yaml --category compliance
 | `--output` | `-o` | Output report path |
 | `--id` | | Workflow version identifier |
 | `--category` | `-c` | Filter by test category |
+| `--limit` | `-l` | Limit number of test cases |
 
 ### analyze - Analyze failures
 
@@ -132,6 +134,7 @@ policyflow hypothesize -a analysis.yaml -w workflow.yaml -o hypotheses.yaml
 ```bash
 policyflow optimize -w workflow.yaml -d dataset.yaml -o optimized.yaml
 policyflow optimize -w workflow.yaml -d dataset.yaml --max-iterations 10 --target 0.95
+policyflow optimize -w workflow.yaml -d dataset.yaml --limit 1 --max-iterations 1  # Quick test
 ```
 
 | Option | Description |
@@ -142,13 +145,15 @@ policyflow optimize -w workflow.yaml -d dataset.yaml --max-iterations 10 --targe
 | `--max-iterations` | Max iterations (default: 10) |
 | `--target` | Target accuracy (0.0-1.0) |
 | `--patience` | Stop after N iterations without improvement |
+| `--limit` | Limit number of test cases |
 | `--model` | LLM model for analysis |
 
 ### improve - Full improvement loop
 
 ```bash
 policyflow improve -w workflow.yaml -d dataset.yaml
-policyflow improve -w workflow.yaml -d dataset.yaml --mode hybrid
+policyflow improve -w workflow.yaml -d dataset.yaml --max-iterations 10 --target 0.95
+policyflow improve -w workflow.yaml -d dataset.yaml --limit 1 --max-iterations 1  # Quick test
 ```
 
 | Option | Description |
@@ -158,8 +163,7 @@ policyflow improve -w workflow.yaml -d dataset.yaml --mode hybrid
 | `--output` | Output improved workflow |
 | `--max-iterations` | Max iterations (default: 5) |
 | `--target` | Target accuracy |
-| `--mode` | Analysis mode: `rule_based`, `llm`, `hybrid` |
-| `--model` | LLM model |
+| `--limit` | Limit number of test cases |
 
 ## Experiment Commands
 

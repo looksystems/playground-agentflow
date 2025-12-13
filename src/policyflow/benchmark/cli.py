@@ -66,6 +66,10 @@ def benchmark_cmd(
         str | None,
         typer.Option("--category", "-c", help="Filter test cases by category"),
     ] = None,
+    limit: Annotated[
+        int | None,
+        typer.Option("--limit", "-l", help="Limit number of test cases to run"),
+    ] = None,
 ):
     """Run benchmark against golden dataset."""
     if ctx.invoked_subcommand is not None:
@@ -86,6 +90,11 @@ def benchmark_cmd(
     if category:
         test_cases = golden_dataset.filter_by_category(category)
         console.print(f"[dim]Filtered to {len(test_cases)} test cases in '{category}' category[/dim]")
+
+    # Apply limit if specified
+    if limit:
+        test_cases = test_cases[:limit]
+        console.print(f"[dim]Limited to {len(test_cases)} test cases[/dim]")
 
     # Configure and run benchmark
     config = BenchmarkConfig(
@@ -572,6 +581,10 @@ def optimize_cmd(
         int,
         typer.Option("--patience", help="Stop after N iterations without improvement"),
     ] = 3,
+    limit: Annotated[
+        int | None,
+        typer.Option("--limit", "-l", help="Limit number of test cases to run"),
+    ] = None,
 ):
     """Run optimization loop to improve workflow accuracy."""
     if ctx.invoked_subcommand is not None:
@@ -588,6 +601,13 @@ def optimize_cmd(
 
     console.print(f"[dim]Loading dataset from {dataset}...[/dim]")
     golden_dataset = load_golden_dataset(dataset)
+
+    # Apply limit if specified
+    if limit:
+        from policyflow.benchmark.models import GoldenDataset
+        limited_cases = golden_dataset.test_cases[:limit]
+        golden_dataset = GoldenDataset(test_cases=limited_cases)
+        console.print(f"[dim]Limited to {len(limited_cases)} test cases[/dim]")
 
     # Configure optimizer
     budget = OptimizationBudget(
@@ -688,6 +708,10 @@ def improve_cmd(
         float | None,
         typer.Option("--target", help="Target accuracy to achieve"),
     ] = None,
+    limit: Annotated[
+        int | None,
+        typer.Option("--limit", "-l", help="Limit number of test cases to run"),
+    ] = None,
 ):
     """Run full improvement loop: benchmark, analyze, generate hypotheses, and optimize."""
     if ctx.invoked_subcommand is not None:
@@ -704,6 +728,13 @@ def improve_cmd(
 
     console.print(f"[dim]Loading dataset from {dataset}...[/dim]")
     golden_dataset = load_golden_dataset(dataset)
+
+    # Apply limit if specified
+    if limit:
+        from policyflow.benchmark.models import GoldenDataset
+        limited_cases = golden_dataset.test_cases[:limit]
+        golden_dataset = GoldenDataset(test_cases=limited_cases)
+        console.print(f"[dim]Limited to {len(limited_cases)} test cases[/dim]")
 
     # Step 1: Initial benchmark
     console.print("\n[bold]Step 1: Initial Benchmark[/bold]")
