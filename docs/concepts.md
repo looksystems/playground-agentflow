@@ -11,6 +11,90 @@ PolicyFlow automatically parses structured policy documents (in markdown) and ev
 - Contract analysis
 - Any domain requiring automated policy enforcement with auditable results
 
+## Design Philosophy
+
+PolicyFlow is built around a key insight: **LLMs are powerful but imperfect**. They excel at semantic understanding but can hallucinate, lack consistency, and struggle to explain their reasoning in auditable ways. The architecture addresses these limitations while preserving the benefits of LLM-powered evaluation.
+
+### Structured Intermediate Representations
+
+**The Problem**: When an LLM parses a policy document directly into evaluation logic, failures are opaque. Did it misunderstand the policy? Generate wrong criteria? Route incorrectly?
+
+**The Solution**: Two-step parsing with a human-readable intermediate format.
+
+From an engineering perspective, this separation of concerns means:
+- **Debuggability**: Inspect the normalized policy YAML to see exactly what the LLM understood
+- **Reproducibility**: Same normalized policy always generates the same workflow
+- **Editability**: Humans can correct LLM parsing errors before workflow generation
+
+From an LLM reasoning perspective:
+- **Decomposition**: Complex tasks (understand policy → generate workflow) are split into simpler subtasks
+- **Verification checkpoints**: Each step's output can be validated before proceeding
+- **Error localization**: When something fails, you know which step to investigate
+
+### Explainable by Design
+
+**The Problem**: LLMs often produce correct answers with no clear reasoning trail. In compliance domains, "trust me" isn't acceptable.
+
+**The Solution**: Node IDs directly correspond to clause numbers (`clause_1_1_a`).
+
+From an engineering perspective:
+- **Traceability**: Every evaluation result maps to specific policy text
+- **Auditability**: Compliance officers can verify exactly which requirements were checked
+- **Debugging**: When clause 1.2.b fails, you know exactly where to look
+
+From an LLM reasoning perspective:
+- **Grounded outputs**: The LLM's decisions are anchored to source document locations
+- **Structured reasoning**: Instead of free-form explanation, reasoning follows the policy structure
+- **Reviewable chain of thought**: Each clause evaluation is a discrete, inspectable decision
+
+### Calibrated Uncertainty
+
+**The Problem**: LLMs don't naturally express uncertainty well. They may confidently state incorrect answers or hedge unnecessarily on clear cases.
+
+**The Solution**: Explicit confidence scores with threshold-based routing.
+
+From an engineering perspective:
+- **Risk management**: High-stakes decisions can require higher confidence thresholds
+- **Human escalation**: Low confidence triggers review rather than silent failures
+- **Quality metrics**: Track confidence distributions to identify systematic issues
+
+From an LLM reasoning perspective:
+- **Epistemic humility**: Force the model to quantify its uncertainty rather than assert
+- **Calibration feedback**: Benchmark results reveal if confidence scores are meaningful
+- **Graceful degradation**: Uncertain cases route to humans instead of producing errors
+
+### Hybrid Evaluation Strategy
+
+**The Problem**: LLM calls are slow and expensive. Using them for every check is wasteful when simple patterns would suffice.
+
+**The Solution**: Mix deterministic nodes (regex, keywords) with LLM nodes (classification, sentiment).
+
+From an engineering perspective:
+- **Cost optimization**: Reserve expensive LLM calls for semantic understanding
+- **Latency reduction**: Deterministic checks run in milliseconds
+- **Predictability**: Regex patterns don't hallucinate or vary between runs
+
+From an LLM reasoning perspective:
+- **Appropriate tool selection**: Not every problem needs semantic understanding
+- **Filtering before reasoning**: Deterministic checks can pre-filter obvious cases
+- **Complementary strengths**: Patterns catch exact matches; LLMs handle nuance
+
+### Continuous Improvement Loop
+
+**The Problem**: LLM-based systems are hard to improve systematically. Without measurement, changes are guesswork.
+
+**The Solution**: Integrated benchmark system with golden datasets and optimization.
+
+From an engineering perspective:
+- **Regression testing**: Ensure improvements don't break previously correct cases
+- **Systematic iteration**: Measure → analyze → hypothesize → test cycle
+- **Version comparison**: Track which workflow version performs best
+
+From an LLM reasoning perspective:
+- **Ground truth feedback**: Compare LLM outputs against known-correct labels
+- **Failure pattern analysis**: Identify systematic errors (certain clause types, edge cases)
+- **Prompt optimization**: Test prompt variations with controlled experiments
+
 ## Core Terminology
 
 ### Policy Structure
