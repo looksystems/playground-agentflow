@@ -8,6 +8,7 @@ PolicyFlow is an LLM-powered compliance evaluation framework that parses policy 
 |----------|-------------|
 | [Concepts & Workflow](concepts.md) | Core concepts, terminology, and evaluation workflow |
 | [Architecture](architecture.md) | System architecture, data flow, and class relationships |
+| [Benchmark System](benchmark.md) | Testing, optimization, and improvement workflows |
 | [CLI Cheatsheet](cli-cheatsheet.md) | Quick reference for all CLI commands |
 | [Source Code Guide](source-guide.md) | Guide to source code structure and extending the system |
 | [User Guide](USERGUIDE.md) | Complete user guide with examples and best practices |
