@@ -1,39 +1,16 @@
 """Data extraction node for PocketFlow."""
 
+from .decorators import node_schema
 from .llm_node import LLMNode
-from .schema import NodeParameter, NodeSchema
 from ..config import WorkflowConfig
 from ..templates import render
 
 
-class DataExtractorNode(LLMNode):
-    """
-    LLM-based node that extracts structured data from input text.
-
-    Uses a flexible schema to define what to extract:
-    - entities: Named entity types (people, organizations, etc.)
-    - values: Specific value types (amounts, dates, etc.)
-    - facts: Simple facts to extract (topic, sentiment, etc.)
-
-    Shared Store:
-        Reads: shared["input_text"]
-        Writes: shared["extracted_data"]
-    """
-
-    parser_schema = NodeSchema(
-        name="DataExtractorNode",
-        description="Extract structured data (entities, values, facts) from text using LLM",
-        category="llm",
-        parameters=[
-            NodeParameter(
-                "schema",
-                "dict",
-                "Extraction schema with 'entities' (dict), 'values' (dict), and/or 'facts' (list)",
-                required=True,
-            ),
-        ],
-        actions=["default"],
-        yaml_example="""- type: DataExtractorNode
+@node_schema(
+    description="Extract structured data (entities, values, facts) from text using LLM",
+    category="llm",
+    actions=["default"],
+    yaml_example="""- type: DataExtractorNode
   id: extract_info
   params:
     schema:
@@ -48,8 +25,24 @@ class DataExtractorNode(LLMNode):
         - urgency level
   routes:
     default: process_extracted""",
-        parser_exposed=True,
-    )
+    parameter_descriptions={
+        "schema": "Extraction schema with 'entities' (dict), 'values' (dict), and/or 'facts' (list)",
+    },
+    parser_exposed=True,
+)
+class DataExtractorNode(LLMNode):
+    """
+    LLM-based node that extracts structured data from input text.
+
+    Uses a flexible schema to define what to extract:
+    - entities: Named entity types (people, organizations, etc.)
+    - values: Specific value types (amounts, dates, etc.)
+    - facts: Simple facts to extract (topic, sentiment, etc.)
+
+    Shared Store:
+        Reads: shared["input_text"]
+        Writes: shared["extracted_data"]
+    """
 
     def __init__(
         self,

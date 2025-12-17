@@ -3,47 +3,14 @@
 import re
 from pocketflow import Node
 
-from .schema import NodeParameter, NodeSchema
+from .decorators import node_schema
 
 
-class TransformNode(Node):
-    """
-    Transforms/preprocesses input text through a series of transformations.
-    This is a deterministic node (no LLM).
-
-    Shared Store:
-        Reads: shared[input_key] (default: "input_text")
-        Writes: shared[output_key] (default: "input_text")
-    """
-
-    parser_schema = NodeSchema(
-        name="TransformNode",
-        description="Preprocess/transform text (lowercase, strip HTML, truncate, etc.)",
-        category="deterministic",
-        parameters=[
-            NodeParameter(
-                "transforms",
-                "list[str]",
-                "Transform operations: lowercase, uppercase, strip_html, normalize_whitespace, strip_urls, strip_emails, truncate:N, trim",
-                required=True,
-            ),
-            NodeParameter(
-                "input_key",
-                "str",
-                "Shared store key to read from",
-                required=False,
-                default="input_text",
-            ),
-            NodeParameter(
-                "output_key",
-                "str",
-                "Shared store key to write to",
-                required=False,
-                default="input_text",
-            ),
-        ],
-        actions=["default"],
-        yaml_example="""- type: TransformNode
+@node_schema(
+    description="Preprocess/transform text (lowercase, strip HTML, truncate, etc.)",
+    category="deterministic",
+    actions=["default"],
+    yaml_example="""- type: TransformNode
   id: preprocess
   params:
     transforms:
@@ -53,8 +20,22 @@ class TransformNode(Node):
       - truncate:5000
   routes:
     default: next_node""",
-        parser_exposed=True,
-    )
+    parameter_descriptions={
+        "transforms": "Transform operations: lowercase, uppercase, strip_html, normalize_whitespace, strip_urls, strip_emails, truncate:N, trim",
+        "input_key": "Shared store key to read from",
+        "output_key": "Shared store key to write to",
+    },
+    parser_exposed=True,
+)
+class TransformNode(Node):
+    """
+    Transforms/preprocesses input text through a series of transformations.
+    This is a deterministic node (no LLM).
+
+    Shared Store:
+        Reads: shared[input_key] (default: "input_text")
+        Writes: shared[output_key] (default: "input_text")
+    """
 
     def __init__(
         self,

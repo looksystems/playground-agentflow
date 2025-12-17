@@ -2,8 +2,8 @@
 
 from pydantic import BaseModel, Field
 
+from .decorators import node_schema
 from .llm_node import LLMNode
-from .schema import NodeParameter, NodeSchema
 from ..config import WorkflowConfig
 from ..templates import render
 
@@ -16,39 +16,11 @@ class ClassificationResult(BaseModel):
     reasoning: str = Field(default="", description="Explanation for classification")
 
 
-class ClassifierNode(LLMNode):
-    """
-    LLM-based node that classifies input into predefined categories.
-
-    Shared Store:
-        Reads: shared["input_text"]
-        Writes: shared["classification"] with {category, confidence, reasoning}
-
-    Actions:
-        Returns the classified category name (one of the provided categories)
-    """
-
-    parser_schema = NodeSchema(
-        name="ClassifierNode",
-        description="Classify input into predefined categories using LLM",
-        category="llm",
-        parameters=[
-            NodeParameter(
-                "categories",
-                "list[str]",
-                "List of category names to classify into",
-                required=True,
-            ),
-            NodeParameter(
-                "descriptions",
-                "dict[str, str]",
-                "Optional descriptions for each category to guide classification",
-                required=False,
-                default=None,
-            ),
-        ],
-        actions=["<category_name>"],
-        yaml_example="""- type: ClassifierNode
+@node_schema(
+    description="Classify input into predefined categories using LLM",
+    category="llm",
+    actions=["<category_name>"],
+    yaml_example="""- type: ClassifierNode
   id: intent_classifier
   params:
     categories:
@@ -66,8 +38,23 @@ class ClassifierNode(LLMNode):
     complaint: escalate_node
     feedback: log_node
     request: action_node""",
-        parser_exposed=True,
-    )
+    parameter_descriptions={
+        "categories": "List of category names to classify into",
+        "descriptions": "Optional descriptions for each category to guide classification",
+    },
+    parser_exposed=True,
+)
+class ClassifierNode(LLMNode):
+    """
+    LLM-based node that classifies input into predefined categories.
+
+    Shared Store:
+        Reads: shared["input_text"]
+        Writes: shared["classification"] with {category, confidence, reasoning}
+
+    Actions:
+        Returns the classified category name (one of the provided categories)
+    """
 
     def __init__(
         self,

@@ -3,7 +3,7 @@
 from pocketflow import Node
 from pydantic import BaseModel, Field
 
-from .schema import NodeParameter, NodeSchema
+from .decorators import node_schema
 
 
 class LengthInfo(BaseModel):
@@ -14,6 +14,26 @@ class LengthInfo(BaseModel):
     bucket: str = Field(description="Length bucket name")
 
 
+@node_schema(
+    description="Route based on input text length (deterministic, no LLM)",
+    category="deterministic",
+    actions=["<bucket_name>"],
+    yaml_example="""- type: LengthGateNode
+  id: length_check
+  params:
+    thresholds:
+      short: 100
+      medium: 1000
+      long: 5000
+  routes:
+    short: quick_process
+    medium: standard_process
+    long: detailed_process""",
+    parameter_descriptions={
+        "thresholds": "Map bucket names to character count thresholds",
+    },
+    parser_exposed=True,
+)
 class LengthGateNode(Node):
     """
     Routes workflow based on input text length.
@@ -26,33 +46,6 @@ class LengthGateNode(Node):
         Returns bucket name based on character count thresholds
         (e.g., "short", "medium", "long")
     """
-
-    parser_schema = NodeSchema(
-        name="LengthGateNode",
-        description="Route based on input text length (deterministic, no LLM)",
-        category="deterministic",
-        parameters=[
-            NodeParameter(
-                "thresholds",
-                "dict[str, int]",
-                "Map bucket names to character count thresholds",
-                required=True,
-            ),
-        ],
-        actions=["<bucket_name>"],
-        yaml_example="""- type: LengthGateNode
-  id: length_check
-  params:
-    thresholds:
-      short: 100
-      medium: 1000
-      long: 5000
-  routes:
-    short: quick_process
-    medium: standard_process
-    long: detailed_process""",
-        parser_exposed=True,
-    )
 
     def __init__(self, thresholds: dict[str, int]):
         """

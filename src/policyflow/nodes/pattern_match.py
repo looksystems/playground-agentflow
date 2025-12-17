@@ -6,7 +6,7 @@ from typing import Literal
 from pocketflow import Node
 from pydantic import BaseModel, Field
 
-from .schema import NodeParameter, NodeSchema
+from .decorators import node_schema
 
 
 class PatternMatchResult(BaseModel):
@@ -22,6 +22,24 @@ class PatternMatchResult(BaseModel):
     )
 
 
+@node_schema(
+    description="Check input against regex/keyword patterns (deterministic, no LLM)",
+    category="deterministic",
+    actions=["matched", "not_matched"],
+    yaml_example="""- type: PatternMatchNode
+  id: check_pii
+  params:
+    patterns: ["\\\\b\\\\d{3}-\\\\d{2}-\\\\d{4}\\\\b", "\\\\bpassword\\\\b"]
+    mode: any
+  routes:
+    matched: flag_sensitive
+    not_matched: continue_processing""",
+    parameter_descriptions={
+        "patterns": "Regex patterns to match against input",
+        "mode": "'any' (match if any pattern matches), 'all' (all must match), or 'none' (none should match)",
+    },
+    parser_exposed=True,
+)
 class PatternMatchNode(Node):
     """
     Deterministic node that checks input against regex/keyword patterns.
@@ -36,37 +54,6 @@ class PatternMatchNode(Node):
                      or none matched (mode="none")
         - "not_matched": Conditions not met based on mode
     """
-
-    parser_schema = NodeSchema(
-        name="PatternMatchNode",
-        description="Check input against regex/keyword patterns (deterministic, no LLM)",
-        category="deterministic",
-        parameters=[
-            NodeParameter(
-                "patterns",
-                "list[str]",
-                "Regex patterns to match against input",
-                required=True,
-            ),
-            NodeParameter(
-                "mode",
-                "str",
-                "'any' (match if any pattern matches), 'all' (all must match), or 'none' (none should match)",
-                required=False,
-                default="any",
-            ),
-        ],
-        actions=["matched", "not_matched"],
-        yaml_example="""- type: PatternMatchNode
-  id: check_pii
-  params:
-    patterns: ["\\\\b\\\\d{3}-\\\\d{2}-\\\\d{4}\\\\b", "\\\\bpassword\\\\b"]
-    mode: any
-  routes:
-    matched: flag_sensitive
-    not_matched: continue_processing""",
-        parser_exposed=True,
-    )
 
     def __init__(
         self,

@@ -2,11 +2,18 @@
 
 from pocketflow import Node
 
-from .schema import NodeSchema
+from .decorators import node_schema
 from ..models import ConfidenceLevel
 from ..config import WorkflowConfig, ConfidenceGateConfig
 
 
+@node_schema(
+    description="Internal node for routing based on confidence thresholds",
+    category="internal",
+    actions=["high_confidence", "needs_review", "low_confidence"],
+    yaml_example="",
+    parser_exposed=False,
+)
 class ConfidenceGateNode(Node):
     """
     Routes workflow based on confidence thresholds.
@@ -23,15 +30,6 @@ class ConfidenceGateNode(Node):
         - "needs_review": Some results between thresholds
         - "low_confidence": Any result below low threshold
     """
-
-    parser_schema = NodeSchema(
-        name="ConfidenceGateNode",
-        description="Internal node for routing based on confidence thresholds",
-        category="internal",
-        parameters=[],
-        actions=["high_confidence", "needs_review", "low_confidence"],
-        parser_exposed=False,
-    )
 
     def __init__(self, config: WorkflowConfig | None = None):
         super().__init__()

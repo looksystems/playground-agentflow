@@ -5,7 +5,7 @@ import re
 from pocketflow import Node
 from pydantic import BaseModel, Field
 
-from .schema import NodeParameter, NodeSchema
+from .decorators import node_schema
 
 
 class KeywordScoreResult(BaseModel):
@@ -19,6 +19,31 @@ class KeywordScoreResult(BaseModel):
     )
 
 
+@node_schema(
+    description="Score input based on weighted keyword presence (deterministic, no LLM)",
+    category="deterministic",
+    actions=["high", "medium", "low"],
+    yaml_example="""- type: KeywordScorerNode
+  id: urgency_scorer
+  params:
+    keywords:
+      urgent: 0.5
+      critical: 0.8
+      asap: 0.3
+      spam: -1.0
+    thresholds:
+      high: 0.7
+      medium: 0.3
+  routes:
+    high: priority_queue
+    medium: standard_queue
+    low: low_priority_queue""",
+    parameter_descriptions={
+        "keywords": "Map keywords to weight scores (can be negative)",
+        "thresholds": "Map score levels ('high', 'medium') to minimum scores",
+    },
+    parser_exposed=True,
+)
 class KeywordScorerNode(Node):
     """
     Scores input text based on weighted keyword presence.
@@ -34,43 +59,6 @@ class KeywordScorerNode(Node):
         - "medium": score >= medium threshold (but < high)
         - "low": score < medium threshold
     """
-
-    parser_schema = NodeSchema(
-        name="KeywordScorerNode",
-        description="Score input based on weighted keyword presence (deterministic, no LLM)",
-        category="deterministic",
-        parameters=[
-            NodeParameter(
-                "keywords",
-                "dict[str, float]",
-                "Map keywords to weight scores (can be negative)",
-                required=True,
-            ),
-            NodeParameter(
-                "thresholds",
-                "dict[str, float]",
-                "Map score levels ('high', 'medium') to minimum scores",
-                required=True,
-            ),
-        ],
-        actions=["high", "medium", "low"],
-        yaml_example="""- type: KeywordScorerNode
-  id: urgency_scorer
-  params:
-    keywords:
-      urgent: 0.5
-      critical: 0.8
-      asap: 0.3
-      spam: -1.0
-    thresholds:
-      high: 0.7
-      medium: 0.3
-  routes:
-    high: priority_queue
-    medium: standard_queue
-    low: low_priority_queue""",
-        parser_exposed=True,
-    )
 
     def __init__(self, keywords: dict[str, float], thresholds: dict[str, float]):
         """

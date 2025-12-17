@@ -1,150 +1,172 @@
-"""Configuration management using python-dotenv."""
+"""Configuration management using pydantic-settings."""
 
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-from pydantic import BaseModel, Field
-
-
-def _find_dotenv() -> Path | None:
-    """Find .env file by walking up from current directory."""
-    current = Path.cwd()
-    while current != current.parent:
-        env_file = current / ".env"
-        if env_file.exists():
-            return env_file
-        current = current.parent
-    return None
+from dotenv import find_dotenv, load_dotenv
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # Load environment variables from .env file
-_env_file = _find_dotenv()
+_env_file = find_dotenv()
 if _env_file:
     load_dotenv(_env_file)
 
 
-class CacheConfig(BaseModel):
+class CacheConfig(BaseSettings):
     """Configuration for LLM response caching."""
 
+    model_config = SettingsConfigDict(env_prefix="POLICY_EVAL_CACHE_", extra="allow")
+
     enabled: bool = Field(
-        default_factory=lambda: os.getenv("POLICY_EVAL_CACHE_ENABLED", "true").lower()
-        == "true",
+        default=True,
         description="Whether caching is enabled",
     )
     ttl: int = Field(
-        default_factory=lambda: int(os.getenv("POLICY_EVAL_CACHE_TTL", "3600")),
+        default=3600,
         ge=0,
         description="Cache TTL in seconds (0 = no expiration)",
     )
-    directory: str = Field(
-        default_factory=lambda: os.getenv("POLICY_EVAL_CACHE_DIR", ".cache"),
+    dir: str = Field(
+        default=".cache",
         description="Directory for cache files",
     )
 
+    @property
+    def directory(self) -> str:
+        """Alias for dir to maintain backward compatibility."""
+        return self.dir
 
-class ThrottleConfig(BaseModel):
+
+class ThrottleConfig(BaseSettings):
     """Configuration for LLM rate limiting."""
 
+    model_config = SettingsConfigDict(env_prefix="POLICY_EVAL_THROTTLE_", extra="allow")
+
     enabled: bool = Field(
-        default_factory=lambda: os.getenv("POLICY_EVAL_THROTTLE_ENABLED", "false").lower()
-        == "true",
+        default=False,
         description="Whether rate limiting is enabled",
     )
-    requests_per_minute: int = Field(
-        default_factory=lambda: int(
-            os.getenv("POLICY_EVAL_THROTTLE_RPM", "60")
-        ),
+    rpm: int = Field(
+        default=60,
         ge=1,
         description="Maximum requests per minute",
     )
 
+    @property
+    def requests_per_minute(self) -> int:
+        """Alias for rpm to maintain backward compatibility."""
+        return self.rpm
 
-class ConfidenceGateConfig(BaseModel):
+
+class ConfidenceGateConfig(BaseSettings):
     """Configuration for confidence-based routing."""
 
-    high_threshold: float = Field(
-        default_factory=lambda: float(
-            os.getenv("POLICY_EVAL_CONFIDENCE_HIGH", "0.8")
-        ),
+    model_config = SettingsConfigDict(env_prefix="POLICY_EVAL_CONFIDENCE_", extra="allow")
+
+    high: float = Field(
+        default=0.8,
         ge=0.0,
         le=1.0,
         description="Confidence above this is high confidence",
     )
-    low_threshold: float = Field(
-        default_factory=lambda: float(
-            os.getenv("POLICY_EVAL_CONFIDENCE_LOW", "0.5")
-        ),
+    low: float = Field(
+        default=0.5,
         ge=0.0,
         le=1.0,
         description="Confidence below this needs review",
     )
 
+    @property
+    def high_threshold(self) -> float:
+        """Alias for high to maintain backward compatibility."""
+        return self.high
 
-class PhoenixConfig(BaseModel):
+    @property
+    def low_threshold(self) -> float:
+        """Alias for low to maintain backward compatibility."""
+        return self.low
+
+    @model_validator(mode="after")
+    def validate_threshold_order(self):
+        """Ensure high_threshold >= low_threshold."""
+        if self.high < self.low:
+            raise ValueError("high_threshold must be >= low_threshold")
+        return self
+
+
+class PhoenixConfig(BaseSettings):
     """Configuration for Arize Phoenix observability/tracing."""
 
+    model_config = SettingsConfigDict(env_prefix="PHOENIX_", extra="allow")
+
     enabled: bool = Field(
-        default_factory=lambda: os.getenv("PHOENIX_ENABLED", "false").lower() == "true",
+        default=False,
         description="Enable Phoenix tracing (requires Phoenix server)",
     )
-    endpoint: str = Field(
-        default_factory=lambda: os.getenv(
-            "PHOENIX_COLLECTOR_ENDPOINT", "http://localhost:6007"
-        ),
+    collector_endpoint: str = Field(
+        default="http://localhost:6007",
         description="Phoenix collector base URL (OTLP endpoint)",
     )
     project_name: str = Field(
-        default_factory=lambda: os.getenv("PHOENIX_PROJECT_NAME", "policyflow"),
+        default="policyflow",
         description="Project name in Phoenix UI",
     )
 
+    @property
+    def endpoint(self) -> str:
+        """Alias for collector_endpoint to maintain backward compatibility."""
+        return self.collector_endpoint
 
-class ModelConfig(BaseModel):
+
+class ModelConfig(BaseSettings):
     """Configuration for model selection at different levels."""
 
+    model_config = SettingsConfigDict(env_prefix="", populate_by_name=True, extra="allow")
+
     # Global default
-    default_model: str = Field(
-        default_factory=lambda: os.getenv(
-            "POLICY_EVAL_MODEL",
-            "anthropic/claude-sonnet-4-20250514"
-        ),
-        description="Global default model for all operations"
+    policy_eval_model: str = Field(
+        default="anthropic/claude-sonnet-4-20250514",
+        description="Global default model for all operations",
     )
+
+    @property
+    def default_model(self) -> str:
+        """Alias for policy_eval_model to maintain backward compatibility."""
+        return self.policy_eval_model
 
     # Node type defaults
     classifier_model: str | None = Field(
-        default_factory=lambda: os.getenv("CLASSIFIER_MODEL"),
-        description="Default model for ClassifierNode"
+        default=None,
+        description="Default model for ClassifierNode",
     )
     data_extractor_model: str | None = Field(
-        default_factory=lambda: os.getenv("DATA_EXTRACTOR_MODEL"),
-        description="Default model for DataExtractorNode"
+        default=None,
+        description="Default model for DataExtractorNode",
     )
     sentiment_model: str | None = Field(
-        default_factory=lambda: os.getenv("SENTIMENT_MODEL"),
-        description="Default model for SentimentNode"
+        default=None,
+        description="Default model for SentimentNode",
     )
     sampler_model: str | None = Field(
-        default_factory=lambda: os.getenv("SAMPLER_MODEL"),
-        description="Default model for SamplerNode"
+        default=None,
+        description="Default model for SamplerNode",
     )
 
     # CLI task defaults
     generate_model: str | None = Field(
-        default_factory=lambda: os.getenv("GENERATE_MODEL"),
-        description="Default model for generate-dataset command"
+        default=None,
+        description="Default model for generate-dataset command",
     )
     analyze_model: str | None = Field(
-        default_factory=lambda: os.getenv("ANALYZE_MODEL"),
-        description="Default model for analyze command"
+        default=None,
+        description="Default model for analyze command",
     )
     hypothesize_model: str | None = Field(
-        default_factory=lambda: os.getenv("HYPOTHESIZE_MODEL"),
-        description="Default model for hypothesize command"
+        default=None,
+        description="Default model for hypothesize command",
     )
     optimize_model: str | None = Field(
-        default_factory=lambda: os.getenv("OPTIMIZE_MODEL"),
-        description="Default model for optimize command"
+        default=None,
+        description="Default model for optimize command",
     )
 
     def get_model_for_node_type(self, node_type: str) -> str:
@@ -155,7 +177,7 @@ class ModelConfig(BaseModel):
             "SentimentNode": self.sentiment_model,
             "SamplerNode": self.sampler_model,
         }
-        return mapping.get(node_type) or self.default_model
+        return mapping.get(node_type) or self.policy_eval_model
 
     def get_model_for_task(self, task: str) -> str:
         """Get model for a specific CLI task with fallback to default."""
@@ -165,22 +187,24 @@ class ModelConfig(BaseModel):
             "hypothesize": self.hypothesize_model,
             "optimize": self.optimize_model,
         }
-        return mapping.get(task) or self.default_model
+        return mapping.get(task) or self.policy_eval_model
 
 
-class WorkflowConfig(BaseModel):
+class WorkflowConfig(BaseSettings):
     """Configuration for the evaluation workflow."""
 
+    model_config = SettingsConfigDict(env_prefix="POLICY_EVAL_", extra="allow")
+
     temperature: float = Field(
-        default_factory=lambda: float(os.getenv("POLICY_EVAL_TEMPERATURE", "0.0")),
+        default=0.0,
         description="LLM temperature",
     )
     max_retries: int = Field(
-        default_factory=lambda: int(os.getenv("POLICY_EVAL_MAX_RETRIES", "3")),
+        default=3,
         description="Max retries per node",
     )
     retry_wait: int = Field(
-        default_factory=lambda: int(os.getenv("POLICY_EVAL_RETRY_WAIT", "2")),
+        default=2,
         description="Seconds between retries",
     )
     confidence_gate: ConfidenceGateConfig = Field(
@@ -208,3 +232,8 @@ class WorkflowConfig(BaseModel):
 def get_config() -> WorkflowConfig:
     """Get the current workflow configuration."""
     return WorkflowConfig()
+
+
+def export_config_schema() -> dict:
+    """Export JSON schema for all config classes for documentation."""
+    return WorkflowConfig.model_json_schema()

@@ -4,8 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .decorators import node_schema
 from .llm_node import LLMNode
-from .schema import NodeParameter, NodeSchema
 from ..config import WorkflowConfig
 
 
@@ -20,49 +20,11 @@ class SampleResults(BaseModel):
     action: str = Field(description="Action: consensus, majority, or split")
 
 
-class SamplerNode(LLMNode):
-    """
-    Runs evaluation N times and aggregates for consensus.
-    This is an LLM-based node that uses temperature > 0 to get diverse samples.
-
-    Shared Store:
-        Reads: shared["input_text"] (or configurable key)
-        Writes: shared["sample_results"] with individual results, aggregated result, agreement_ratio
-    """
-
-    parser_schema = NodeSchema(
-        name="SamplerNode",
-        description="Run evaluation N times and aggregate for consensus (LLM with sampling)",
-        category="llm",
-        parameters=[
-            NodeParameter(
-                "n_samples",
-                "int",
-                "Number of times to run the evaluation",
-                required=True,
-            ),
-            NodeParameter(
-                "aggregation",
-                "str",
-                "'majority' (>50% agree), 'unanimous' (100% agree), or 'any' (at least one True)",
-                required=True,
-            ),
-            NodeParameter(
-                "inner_prompt",
-                "str",
-                "Evaluation prompt to run multiple times (should return result: true/false)",
-                required=True,
-            ),
-            NodeParameter(
-                "system_prompt",
-                "str",
-                "Optional system prompt for the evaluation",
-                required=False,
-                default=None,
-            ),
-        ],
-        actions=["consensus", "majority", "split"],
-        yaml_example="""- type: SamplerNode
+@node_schema(
+    description="Run evaluation N times and aggregate for consensus (LLM with sampling)",
+    category="llm",
+    actions=["consensus", "majority", "split"],
+    yaml_example="""- type: SamplerNode
   id: consensus_check
   params:
     n_samples: 5
@@ -72,8 +34,23 @@ class SamplerNode(LLMNode):
     consensus: confident_decision
     majority: likely_decision
     split: needs_human_review""",
-        parser_exposed=True,
-    )
+    parameter_descriptions={
+        "n_samples": "Number of times to run the evaluation",
+        "aggregation": "'majority' (>50% agree), 'unanimous' (100% agree), or 'any' (at least one True)",
+        "inner_prompt": "Evaluation prompt to run multiple times (should return result: true/false)",
+        "system_prompt": "Optional system prompt for the evaluation",
+    },
+    parser_exposed=True,
+)
+class SamplerNode(LLMNode):
+    """
+    Runs evaluation N times and aggregates for consensus.
+    This is an LLM-based node that uses temperature > 0 to get diverse samples.
+
+    Shared Store:
+        Reads: shared["input_text"] (or configurable key)
+        Writes: shared["sample_results"] with individual results, aggregated result, agreement_ratio
+    """
 
     def __init__(
         self,

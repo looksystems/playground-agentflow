@@ -4,8 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .decorators import node_schema
 from .llm_node import LLMNode
-from .schema import NodeParameter, NodeSchema
 from ..config import WorkflowConfig
 from ..templates import render
 
@@ -23,6 +23,24 @@ class SentimentResult(BaseModel):
     )
 
 
+@node_schema(
+    description="Analyze sentiment/emotional tone of text using LLM",
+    category="llm",
+    actions=["positive", "negative", "neutral", "mixed"],
+    yaml_example="""- type: SentimentNode
+  id: sentiment_check
+  params:
+    granularity: detailed
+  routes:
+    positive: happy_path
+    negative: escalate
+    neutral: standard_path
+    mixed: review_needed""",
+    parameter_descriptions={
+        "granularity": "'basic' (sentiment + confidence) or 'detailed' (adds intensity + emotions)",
+    },
+    parser_exposed=True,
+)
 class SentimentNode(LLMNode):
     """
     Classifies sentiment/emotional tone of input text using LLM.
@@ -40,32 +58,6 @@ class SentimentNode(LLMNode):
     """
 
     VALID_SENTIMENTS = {"positive", "negative", "neutral", "mixed"}
-
-    parser_schema = NodeSchema(
-        name="SentimentNode",
-        description="Analyze sentiment/emotional tone of text using LLM",
-        category="llm",
-        parameters=[
-            NodeParameter(
-                "granularity",
-                "str",
-                "'basic' (sentiment + confidence) or 'detailed' (adds intensity + emotions)",
-                required=False,
-                default="basic",
-            ),
-        ],
-        actions=["positive", "negative", "neutral", "mixed"],
-        yaml_example="""- type: SentimentNode
-  id: sentiment_check
-  params:
-    granularity: detailed
-  routes:
-    positive: happy_path
-    negative: escalate
-    neutral: standard_path
-    mixed: review_needed""",
-        parser_exposed=True,
-    )
 
     def __init__(
         self,
